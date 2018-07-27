@@ -18,6 +18,6 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     keywords='',
-    license='?',
+    license='MIT',
     install_requires=['lxml'],
 )
