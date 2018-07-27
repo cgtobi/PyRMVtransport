@@ -1,23 +1,23 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+import setuptools
 
-setup(
-    name='PyRMVtransport',
-    version='0.0.1',
-    description='get transport information from opendata.rmv.de',
-    author='cgtobi',
-    author_email='cgtobi@gmail.com',
-    url='https://github.com/cgtobi/PyRMVtransport',
-    packages=['RMVtransport'],
-    classifiers=[
-        "Programming Language :: Python :: 2",
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="PyRMVtransport",
+    version="0.0.1",
+    author="cgtobi",
+    author_email="cgtobi@gmail.com",
+    description="Get transport information from opendata.rmv.de",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/cgtobi/PyRMVtransport",
+    packages=setuptools.find_packages(),
+    classifiers=(
         "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
-    ],
-    keywords='',
-    license='MIT',
-    install_requires=['lxml'],
+    ),
 )
