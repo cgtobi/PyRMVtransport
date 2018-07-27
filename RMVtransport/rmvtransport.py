@@ -188,7 +188,7 @@ class RMVtransport(object):
 
         self.maxJourneys = maxJourneys
 
-        self.productsFilter = self._product_filter(products)
+        self.productsFilter = _product_filter(products)
 
         base_url = (self.base_uri + self.stboard_path + self.lang +
                     self.type + self.with_suggestions)
