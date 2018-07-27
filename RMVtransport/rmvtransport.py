@@ -223,16 +223,8 @@ class RMVtransport(object):
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
             print(self.o.SBRes.Err.get('text'))
-            pass
 
         return self.to_json()
-
-    def _product_filter(self, products):
-        """Calculate the product filter."""
-        filter = 0
-        for p in set([PRODUCTS[p] for p in products]):
-            filter += p
-        return format(filter, 'b')[::-1]
 
     def to_json(self):
         """Return travel data as JSON."""
@@ -254,10 +246,9 @@ class RMVtransport(object):
                              'stops': [s['station'] for s in j.stops],
                              'info': j.info,
                              'info_long': j.info_long,
-                             'icon': j.icon,
-                             })
+                             'icon': j.icon})
         data['journeys'] = (journeys)
-        return json.dumps(data)
+        return data
 
     def _station(self):
         """Extract station name."""
@@ -283,26 +274,33 @@ class RMVtransport(object):
             print("%s: %s (%s)" % (j.category, j.number, j.trainId))
             print("Richtung: %s" % (j.direction))
             print("Abfahrt in %i min." % (j.real_departure))
-            # print("Abfahrt %s (+%i)" % (j.departure.time(), j.delay))
-            # print("Nächste Haltestellen: %s" % (
-            #     [s['station'] for s in j.stops]))
-            # if j.info:
-            #     print("Hinweis: %s" % (j.info))
-            #     print("Hinweis (lang): %s" % (j.info_long))
-            # print("Icon: %s" % j.icon)
+            print("Abfahrt %s (+%i)" % (j.departure.time(), j.delay))
+            print("Nächste Haltestellen: %s" % (
+                [s['station'] for s in j.stops]))
+            if j.info:
+                print("Hinweis: %s" % (j.info))
+                print("Hinweis (lang): %s" % (j.info_long))
+            print("Icon: %s" % j.icon)
 
-    def search_station(self, station, max=20):
+    def search_station(self, station, max_results=20):
         """Search for station name."""
         base_url = (self.base_uri + self.getstop_path + self.lang +
                     self.type + self.with_suggestions)
         params = {
             'getstop': 1,
-            'REQ0JourneyStopsS0A': max,
+            'REQ0JourneyStopsS0A': max_results,
             'REQ0JourneyStopsS0G': station,
         }
         url = base_url + urllib.parse.urlencode(params)
         req = urllib.request.urlopen(url)
         data = req.read().decode('utf-8')
         data = json.loads(data[data.find('{'):data.rfind('}')+1])
-        return data
-        return [s['value'] for s in root['suggestions']]
+        return [s['value'] for s in data['suggestions']]
+
+
+def _product_filter(products):
+    """Calculate the product filter."""
+    _filter = 0
+    for p in set([PRODUCTS[p] for p in products]):
+        _filter += p
+    return format(_filter, 'b')[::-1]
