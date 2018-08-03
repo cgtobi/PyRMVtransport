@@ -37,7 +37,7 @@ class RMVJourney(object):
 
         self.name = self._name()
         self.number = self._number()
-        self.category = self._category()
+        self.product = self._product()
         self.trainId = self.journey.get('trainId')
         self.departure = self._departure()
         self.delay = self._delay()
@@ -80,14 +80,14 @@ class RMVJourney(object):
                 (departure + timedelta(hours=24) - self.now).seconds / 60)
         return -1
 
-    def _category(self):
-        """Extract train category."""
-        attr_category = self.journey.JourneyAttributeList.JourneyAttribute[
+    def _product(self):
+        """Extract train product."""
+        attr_product = self.journey.JourneyAttributeList.JourneyAttribute[
             self.attr_types.index('CATEGORY')].Attribute
-        attr_variants = attr_category.xpath('AttributeVariant/@type')
-        category = attr_category.AttributeVariant[
+        attr_variants = attr_product.xpath('AttributeVariant/@type')
+        product = attr_product.AttributeVariant[
             attr_variants.index('NORMAL')].Text.pyval
-        return category
+        return product
 
     def _number(self):
         """Extract train number."""
@@ -148,7 +148,7 @@ class RMVJourney(object):
     def _icon(self):
         """Extract product icon."""
         pic_url = "https://www.rmv.de/auskunft/s/n/img/products/%i_pic.png"
-        return pic_url % PRODUCTS[self.category]
+        return pic_url % PRODUCTS[self.product]
 
 
 class RMVtransport(object):
@@ -208,13 +208,16 @@ class RMVtransport(object):
         req = urllib.request.urlopen(url)
         xml = req.read()
 
-        self.o = objectify.fromstring(xml)
+        try:
+            self.o = objectify.fromstring(xml)
+        except:
+            print(xml)
 
         try:
             self.now = self.current_time()
             self.station = self._station()
         except TypeError:
-            print(objectify.dump(self.o))
+            print("TypeError", objectify.dump(self.o))
             raise
 
         self.journeys.clear()
@@ -237,7 +240,7 @@ class RMVtransport(object):
         for j in sorted(
                 self.journeys,
                 key=lambda k: k.real_departure)[:self.maxJourneys]:
-            journeys.append({'category': j.category,
+            journeys.append({'product': j.product,
                              'number': j.number,
                              'trainId': j.trainId,
                              'direction': j.direction,
@@ -256,11 +259,18 @@ class RMVtransport(object):
 
     def current_time(self):
         """Extract current time."""
-        _date = datetime.strptime(
-            self.o.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
-        _time = datetime.strptime(
-            self.o.SBRes.SBReq.StartT.get("time"), '%H:%M')
-        return datetime.combine(_date.date(), _time.time())
+        if self.o is not None:
+            if self.o.SBRes.SBReq is not None:
+                _date = datetime.strptime(
+                    self.o.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
+                _time = datetime.strptime(
+                    self.o.SBRes.SBReq.StartT.get("time"), '%H:%M')
+            else:
+                _date = datetime.strptime(
+                    self.o.SBRes.StartT.get("date"), '%Y%m%d')
+                _time = datetime.strptime(
+                    self.o.SBRes.StartT.get("time"), '%H:%M')
+            return datetime.combine(_date.date(), _time.time())
 
     def output(self):
         """Pretty print travel times."""
@@ -271,7 +281,7 @@ class RMVtransport(object):
                 self.journeys,
                 key=lambda k: k.real_departure)[:self.maxJourneys]:
             print("-------------")
-            print("%s: %s (%s)" % (j.category, j.number, j.trainId))
+            print("%s: %s (%s)" % (j.product, j.number, j.trainId))
             print("Richtung: %s" % (j.direction))
             print("Abfahrt in %i min." % (j.real_departure))
             print("Abfahrt %s (+%i)" % (j.departure.time(), j.delay))
