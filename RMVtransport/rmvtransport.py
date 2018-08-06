@@ -41,6 +41,7 @@ class RMVJourney(object):
         self.trainId = self.journey.get('trainId')
         self.departure = self._departure()
         self.delay = self._delay()
+        self.real_departure_time = self._real_departure_time()
         self.real_departure = self._real_departure()
         self.direction = self._direction()
         self.info = self._info()
@@ -70,9 +71,13 @@ class RMVJourney(object):
             datetime.strptime(self.journey.MainStop.BasicStop.Dep.Time.text,
                               '%H:%M').time())
 
+    def _real_departure_time(self):
+        """Calculate actual departure time."""
+        return self.departure + timedelta(minutes=self.delay)
+
     def _real_departure(self):
         """Calculate actual minutes left for departure."""
-        departure = self.departure + timedelta(minutes=self.delay)
+        departure = self.real_departure_time
         if departure >= self.now:
             return round((departure - self.now).seconds / 60)
         elif departure < self.now - timedelta(hours=12):
@@ -244,6 +249,7 @@ class RMVtransport(object):
                              'number': j.number,
                              'trainId': j.trainId,
                              'direction': j.direction,
+                             'departure_time': j.real_departure_time,
                              'minutes': j.real_departure,
                              'delay': j.delay,
                              'stops': [s['station'] for s in j.stops],
