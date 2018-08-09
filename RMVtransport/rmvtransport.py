@@ -66,10 +66,14 @@ class RMVJourney(object):
 
     def _departure(self):
         """Extract departure time."""
-        return datetime.combine(
-            self.now.date(),
-            datetime.strptime(self.journey.MainStop.BasicStop.Dep.Time.text,
-                              '%H:%M').time())
+        departure_time = datetime.strptime(
+            self.journey.MainStop.BasicStop.Dep.Time.text,
+            '%H:%M').time()
+        if departure_time > (self.now - timedelta(hours=1)).time():
+            return datetime.combine(self.now.date(),
+                                    departure_time)
+        return datetime.combine(self.now.date() + timedelta(days=1),
+                                departure_time)
 
     def _real_departure_time(self):
         """Calculate actual departure time."""
@@ -77,13 +81,7 @@ class RMVJourney(object):
 
     def _real_departure(self):
         """Calculate actual minutes left for departure."""
-        departure = self.real_departure_time
-        if departure >= self.now:
-            return round((departure - self.now).seconds / 60)
-        elif departure < self.now - timedelta(hours=12):
-            return round(
-                (departure + timedelta(hours=24) - self.now).seconds / 60)
-        return -1
+        return round((self.real_departure_time - self.now).seconds / 60)
 
     def _product(self):
         """Extract train product."""
@@ -216,13 +214,14 @@ class RMVtransport(object):
         try:
             self.o = objectify.fromstring(xml)
         except:
-            print(xml)
+            print("Get from string", xml)
+            raise
 
         try:
             self.now = self.current_time()
             self.station = self._station()
         except TypeError:
-            print("TypeError", objectify.dump(self.o))
+            print("Time/Station TypeError", objectify.dump(self.o))
             raise
 
         self.journeys.clear()
@@ -230,7 +229,8 @@ class RMVtransport(object):
             for journey in self.o.SBRes.JourneyList.Journey:
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
-            print(self.o.SBRes.Err.get('text'))
+            print("Extract journeys", self.o.SBRes.Err.get('text'))
+            raise
 
         return self.to_json()
 
