@@ -9,8 +9,8 @@ init:
 	pipenv lock
 	pipenv install --dev
 publish:
-	python setup.py sdist bdist_wheel
+	python3 setup.py sdist bdist_wheel
 	pipenv run twine upload dist/*
-	rm -rf dist/ build/ .egg pytile.egg-info/
+	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
 test:
 	pipenv run detox
