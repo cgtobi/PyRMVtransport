@@ -11,6 +11,8 @@ init:
 publish:
 	python3 setup.py sdist bdist_wheel
 	pipenv run twine upload dist/*
+	clean
+clean:
 	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
 test:
 	pipenv run detox
