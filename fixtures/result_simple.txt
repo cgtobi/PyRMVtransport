@@ -1,0 +1,11 @@
+Mainz Hauptbahnhof - 2018-08-30 23:17:00
+11111111111
+-------------
+Bus: 54 (2746308001)
+Richtung: Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz
+Abfahrt in 0 min.
+Abfahrt 23:17:00 (+0)
+Nächste Haltestellen: ['Mainz Münsterplatz', 'Mainz Schillerplatz', 'Mainz Höfchen/Listmann', 'Mainz Rheingoldhalle/Rathaus', 'Mainz Brückenplatz', 'Wiesbaden-Mainz-Kastel Brückenkopf', 'Wiesbaden-Mainz-Kastel Bahnhof', 'Wiesbaden-Mainz-Kostheim Luisenstraße', 'Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz']
+Hinweis: Bischofsheim: Busse 54, 55, 72, 81, 87, 91 - Änderungen vom 23.08. bis 07.09.
+Hinweis (lang): Die Busse fahren eine Umleitung. Die Änderungen sind größtenteils in der Verbindungsauskunft enthalten.
+Icon: https://www.rmv.de/auskunft/s/n/img/products/64_pic.png

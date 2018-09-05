@@ -1,0 +1,248 @@
+<ResC
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  ver="2.0"
+  producer="HAFAS 5.42.RMV.X.P.JPL.7.2.10"
+  lang="de"
+  planId="1535558163-1530862110-1535611551-1526569424-1525676398-1486513855-planid=1535558163-planid0=1535558163-planid_adr=1530862110-planid_poi=1535611551-planid_ext=1526569424-planid_lmk=1525676398-planid_poi=1486513855"
+  xsi:noNamespaceSchemaLocation="http://rmv.hafas.de/xsd/hafasXMLStationBoard_2_0.xsd">
+  <SBRes dir="D">
+    <SBReq dir="D">
+      <Start>
+        <Station>
+          <ExternalId pooluic="80">3006904</ExternalId>
+          <HafasName>
+            <Text>Mainz Hauptbahnhof</Text>
+          </HafasName>
+        </Station>
+      </Start>
+      <StartT time="23:17" date="20180830"/>
+      <EndT time="23:32" date="20180830"/>
+    </SBReq>
+    <JourneyList>
+      <Journey trainId="2746308001">
+        <JourneyAttributeList>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="NAME">
+              <AttributeVariant type="NORMAL">
+                <Text>54</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="CATEGORY">
+              <AttributeCode>6</AttributeCode>
+              <AttributeVariant type="LONG">
+                <Text>Niederflurbus</Text>
+              </AttributeVariant>
+              <AttributeVariant type="SHORT">
+                <Text>BB8</Text>
+              </AttributeVariant>
+              <AttributeVariant type="NORMAL">
+                <Text>Bus</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="INTERNALCATEGORY">
+              <AttributeVariant type="NORMAL">
+                <Text>BB8</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="OPERATOR">
+              <AttributeVariant type="LONG">
+                <Text>Mainzer Verkehrsgesellschaft mbH</Text>
+              </AttributeVariant>
+              <AttributeVariant type="SHORT">
+                <Text>MVG</Text>
+              </AttributeVariant>
+              <AttributeVariant type="NORMAL">
+                <Text>MVG</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="NUMBER">
+              <AttributeVariant type="NORMAL">
+                <Text>54</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="DIRECTION">
+              <AttributeVariant type="SHORT">
+                <Text>Ginsheim Fr.-Ebert-Platz</Text>
+              </AttributeVariant>
+              <AttributeVariant type="NORMAL">
+                <Text>Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="0" to="33">
+            <Attribute priority="-1" type="INFO">
+              <AttributeCode>FD</AttributeCode>
+              <AttributeVariant type="NORMAL">
+                <Text>1767</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+          <JourneyAttribute from="10" to="33">
+            <Attribute priority="-1" type="EXTERNALID">
+              <AttributeVariant type="NORMAL">
+                <Text>27669</Text>
+              </AttributeVariant>
+            </Attribute>
+          </JourneyAttribute>
+        </JourneyAttributeList>
+        <MainStop>
+          <BasicStop index="10">
+            <Location x="8258453" y="50001436" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3006904</ExternalId>
+                <HafasName>
+                  <Text>Mainz Hauptbahnhof</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Dep>
+              <Time>23:17</Time>
+              <Delay>0</Delay>
+              <Platform>I</Platform>
+            </Dep>
+          </BasicStop>
+        </MainStop>
+        <Product name="54" image="bb8"/>
+        <PassList>
+          <BasicStop index="11">
+            <Location x="8263712" y="50000304" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3025439</ExternalId>
+                <HafasName>
+                  <Text>Mainz Münsterplatz</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:18</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="12">
+            <Location x="8267325" y="49998308" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3029052</ExternalId>
+                <HafasName>
+                  <Text>Mainz Schillerplatz</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:20</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="13">
+            <Location x="8271847" y="50000196" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3029051</ExternalId>
+                <HafasName>
+                  <Text>Mainz Höfchen/Listmann</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:22</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="14">
+            <Location x="8275568" y="50001418" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3029040</ExternalId>
+                <HafasName>
+                  <Text>Mainz Rheingoldhalle/Rathaus</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:24</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="15">
+            <Location x="8274544" y="50003198" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3018018</ExternalId>
+                <HafasName>
+                  <Text>Mainz Brückenplatz</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:25</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="16">
+            <Location x="8280198" y="50008070" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3025256</ExternalId>
+                <HafasName>
+                  <Text>Wiesbaden-Mainz-Kastel Brückenkopf</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:27</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="17">
+            <Location x="8282571" y="50006866" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3006903</ExternalId>
+                <HafasName>
+                  <Text>Wiesbaden-Mainz-Kastel Bahnhof</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:28</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="20">
+            <Location x="8301511" y="50000951" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3018092</ExternalId>
+                <HafasName>
+                  <Text>Wiesbaden-Mainz-Kostheim Luisenstraße</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:31</Time>
+            </Arr>
+          </BasicStop>
+          <BasicStop index="33">
+            <Location x="8344462" y="49967080" type="WGS84">
+              <Station>
+                <ExternalId pooluic="80">3014119</ExternalId>
+                <HafasName>
+                  <Text>Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz</Text>
+                </HafasName>
+              </Station>
+            </Location>
+            <Arr>
+              <Time>23:49</Time>
+            </Arr>
+          </BasicStop>
+        </PassList>
+        <InfoTextList>
+          <InfoText
+            text="Bischofsheim: Busse 54, 55, 72, 81, 87, 91 -
+Änderungen vom 23.08. bis 07.09."
+            textL="Die Busse fahren eine Umleitung. Die Änderungen sind
+größtenteils in der Verbindungsauskunft enthalten."
+            type="normal"/>
+        </InfoTextList>
+        <LastRTInfo time="23:11" date="20180830"/>
+      </Journey>
+    </JourneyList>
+    <NextUpdate time="23:18" date="20180830"/>
+  </SBRes>
+</ResC>

@@ -1,0 +1,18 @@
+{
+  "station": "Mainz Hauptbahnhof",
+  "stationId": "3006904",
+  "filter": "11111111111",
+  "journeys": [{
+    "product": "Bus",
+    "number": 54,
+    "trainId": "2746308001",
+    "direction": "Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz",
+    "departure_time": "2018-08-30T23:17:00",
+    "minutes": 0,
+    "delay": 0,
+    "stops": ["Mainz Münsterplatz", "Mainz Schillerplatz", "Mainz Höfchen/Listmann", "Mainz Rheingoldhalle/Rathaus", "Mainz Brückenplatz", "Wiesbaden-Mainz-Kastel Brückenkopf", "Wiesbaden-Mainz-Kastel Bahnhof", "Wiesbaden-Mainz-Kostheim Luisenstraße", "Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz"],
+    "info": "Bischofsheim: Busse 54, 55, 72, 81, 87, 91 - Änderungen vom 23.08. bis 07.09.",
+    "info_long": "Die Busse fahren eine Umleitung. Die Änderungen sind größtenteils in der Verbindungsauskunft enthalten.",
+    "icon": "https://www.rmv.de/auskunft/s/n/img/products/64_pic.png"
+  }]
+}
