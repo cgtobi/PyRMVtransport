@@ -1,6 +1,11 @@
 # PyRMVtransport :bus:
 Python library to make use of transport information from opendata.rmv.de.
 
+[![PyPi](https://img.shields.io/pypi/v/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
+[![PyPi](https://img.shields.io/pypi/pyversions/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
+[![PyPi](https://img.shields.io/pypi/l/PyRMVtransport.svg)](https://github.com/cgtobi/PyRMVtransport/blob/master/LICENSE)
+
+
 ## Installation
 
 ```bash
