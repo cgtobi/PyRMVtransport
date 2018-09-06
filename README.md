@@ -1,4 +1,4 @@
-# PyRMVtransport
+# PyRMVtransport :bus:
 Python library to make use of transport information from opendata.rmv.de.
 
 ## Installation
