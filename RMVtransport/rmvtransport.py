@@ -166,8 +166,7 @@ class RMVtransport(object):
 
         self.productsFilter = _product_filter(products)
 
-        base_url = (self.base_uri + self.stboard_path + self.lang +
-                    self.type + self.with_suggestions)
+        base_url = self._base_url()
         params = {'selectDate':     'today',
                   'time':           'now',
                   'input':          self.stationId,
@@ -233,6 +232,11 @@ class RMVtransport(object):
         data['journeys'] = (journeys)
         return data
 
+    def _base_url(self):
+        """Build base url."""
+        return (self.base_uri + self.stboard_path + self.lang +
+                self.type + self.with_suggestions)
+
     def _station(self):
         """Extract station name."""
         return self.o.SBRes.SBReq.Start.Station.HafasName.Text.pyval
@@ -274,21 +278,6 @@ class RMVtransport(object):
                 print("Hinweis: %s" % (j.info))
                 print("Hinweis (lang): %s" % (j.info_long))
             print("Icon: %s" % j.icon)
-
-    def search_station(self, station, max_results=20):
-        """Search for station name."""
-        base_url = (self.base_uri + self.getstop_path + self.lang +
-                    self.type + self.with_suggestions)
-        params = {
-            'getstop': 1,
-            'REQ0JourneyStopsS0A': max_results,
-            'REQ0JourneyStopsS0G': station,
-        }
-        url = base_url + urllib.parse.urlencode(params)
-        req = urllib.request.urlopen(url)
-        data = req.read().decode('utf-8')
-        data = json.loads(data[data.find('{'):data.rfind('}')+1])
-        return [s['value'] for s in data['suggestions']]
 
 
 def _product_filter(products):
