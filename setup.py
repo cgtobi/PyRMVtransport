@@ -16,6 +16,7 @@ setuptools.setup(
     install_requires=[
         'lxml',
     ],
+    license='MIT',
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
