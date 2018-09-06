@@ -13,4 +13,4 @@ jobs:
       python: "3.6"
       script: "pipenv run codecov"
 after_success:
-- codecov
+  - codecov
