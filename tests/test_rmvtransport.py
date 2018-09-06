@@ -47,7 +47,7 @@ def test_getdepartures(mock_urlopen, capsys):
 
 @mock.patch('urllib.request.urlopen')
 def test_departures_products(mock_urlopen):
-    """."""
+    """Test products filter."""
     with open('fixtures/request.xml') as xml_file:
         xml = xml_file.read()
     with open('fixtures/result_products_filter.json') as json_file:
@@ -68,7 +68,7 @@ def test_departures_products(mock_urlopen):
 @pytest.mark.xfail(raises=AttributeError)
 @mock.patch('urllib.request.urlopen')
 def test_departures_error_xml(mock_urlopen):
-    """."""
+    """Test with bad xml."""
     xml = "<ResC></ResC>"
     cm = mock.MagicMock()
     cm.getcode.return_value = 200
@@ -83,9 +83,9 @@ def test_departures_error_xml(mock_urlopen):
 
 @pytest.mark.xfail(raises=etree.XMLSyntaxError)
 @mock.patch('urllib.request.urlopen')
-def test_departures_error_empty_xml(mock_urlopen):
-    """."""
-    xml = ""
+def test_no_xml(mock_urlopen):
+    """Test with empty xml."""
+    xml = ''
     cm = mock.MagicMock()
     cm.getcode.return_value = 200
     cm.read.return_value = xml
@@ -100,7 +100,7 @@ def test_departures_error_empty_xml(mock_urlopen):
 @pytest.mark.xfail(raises=ValueError)
 @mock.patch('urllib.request.urlopen')
 def test_departures_error_server(mock_urlopen):
-    """."""
+    """Test server error handling."""
     cm = mock.MagicMock()
     cm.getcode.return_value = 500
     cm.__enter__.return_value = cm
@@ -114,7 +114,7 @@ def test_departures_error_server(mock_urlopen):
 @pytest.mark.xfail(raises=TypeError)
 @mock.patch('urllib.request.urlopen')
 def test_departures_error_missing_argument(mock_urlopen):
-    """."""
+    """Test missing argument handling."""
     cm = mock.MagicMock()
     cm.getcode.return_value = 500
     cm.__enter__.return_value = cm
@@ -126,7 +126,7 @@ def test_departures_error_missing_argument(mock_urlopen):
 
 @mock.patch('urllib.request.urlopen')
 def test_departures_bad_request(mock_urlopen):
-    """."""
+    """Test bad xml."""
     with open('fixtures/bad_request.xml') as xml_file:
         xml = xml_file.read()
     with open('fixtures/result_bad.json') as json_file:
@@ -142,3 +142,20 @@ def test_departures_bad_request(mock_urlopen):
     directionId = '3006905'
     data = rmv.get_departures(stationId, directionId)
     assert data == result
+
+
+@pytest.mark.xfail(raises=AttributeError)
+@mock.patch('urllib.request.urlopen')
+def test_no_journeys(mock_urlopen):
+    """Test with no journeys."""
+    with open('fixtures/request_no_journeys.xml') as xml_file:
+        xml = xml_file.read()
+    cm = mock.MagicMock()
+    cm.getcode.return_value = 200
+    cm.read.return_value = xml
+    cm.__enter__.return_value = cm
+    mock_urlopen.return_value = cm
+
+    rmv = RMVtransport.RMVtransport()
+    stationId = '3006904'
+    data = rmv.get_departures(stationId)
