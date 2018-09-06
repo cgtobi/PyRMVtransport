@@ -1,3 +1,4 @@
+.PHONY: ci coverage flake8 init publish clean test
 ci:
 	pipenv run py.test --junitxml=report.xml
 coverage:
