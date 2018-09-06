@@ -244,20 +244,17 @@ class RMVtransport(object):
     def current_time(self):
         """Extract current time."""
         if self.o is not None:
-            try:
-                if self.o.SBRes.SBReq is not None:
-                    _date = datetime.strptime(
-                        self.o.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
-                    _time = datetime.strptime(
-                        self.o.SBRes.SBReq.StartT.get("time"), '%H:%M')
-                else:
-                    _date = datetime.strptime(
-                        self.o.SBRes.StartT.get("date"), '%Y%m%d')
-                    _time = datetime.strptime(
-                        self.o.SBRes.StartT.get("time"), '%H:%M')
-                return datetime.combine(_date.date(), _time.time())
-            except AttributeError:
-                raise
+            if self.o.SBRes.SBReq is not None:
+                _date = datetime.strptime(
+                    self.o.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
+                _time = datetime.strptime(
+                    self.o.SBRes.SBReq.StartT.get("time"), '%H:%M')
+            else:
+                _date = datetime.strptime(
+                    self.o.SBRes.StartT.get("date"), '%Y%m%d')
+                _time = datetime.strptime(
+                    self.o.SBRes.StartT.get("time"), '%H:%M')
+            return datetime.combine(_date.date(), _time.time())
 
     def output(self):
         """Pretty print travel times."""
