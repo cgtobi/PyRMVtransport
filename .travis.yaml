@@ -7,8 +7,3 @@ python:
 install: "make init"
 script: "make ci"
 cache: "pip"
-jobs:
-  include:
-    - stage: "coverage"
-      python: "3.6"
-script: "pipenv run codecov"
