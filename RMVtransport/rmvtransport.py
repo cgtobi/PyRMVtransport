@@ -35,15 +35,15 @@ class RMVJourney(object):
         self.attr_types = self.journey.JourneyAttributeList.xpath(
             '*/Attribute/@type')
 
-        self.name = self._name()
-        self.number = self._number()
-        self.product = self._product()
+        self.name = self._extract('NAME')
+        self.number = self._extract('NUMBER')
+        self.product = self._extract('CATEGORY')
         self.trainId = self.journey.get('trainId')
         self.departure = self._departure()
         self.delay = self._delay()
         self.real_departure_time = self._real_departure_time()
         self.real_departure = self._real_departure()
-        self.direction = self._direction()
+        self.direction = self._extract('DIRECTION')
         self.info = self._info()
         self.info_long = self._info_long()
         self.platform = self._platform()
@@ -83,41 +83,14 @@ class RMVJourney(object):
         """Calculate actual minutes left for departure."""
         return round((self.real_departure_time - self.now).seconds / 60)
 
-    def _product(self):
-        """Extract train product."""
-        attr_product = self.journey.JourneyAttributeList.JourneyAttribute[
-            self.attr_types.index('CATEGORY')].Attribute
-        attr_variants = attr_product.xpath('AttributeVariant/@type')
-        product = attr_product.AttributeVariant[
+    def _extract(self, attribute):
+        """Extract train information."""
+        attr_data = self.journey.JourneyAttributeList.JourneyAttribute[
+            self.attr_types.index(attribute)].Attribute
+        attr_variants = attr_data.xpath('AttributeVariant/@type')
+        data = attr_data.AttributeVariant[
             attr_variants.index('NORMAL')].Text.pyval
-        return product
-
-    def _number(self):
-        """Extract train number."""
-        attr_number = self.journey.JourneyAttributeList.JourneyAttribute[
-            self.attr_types.index('NUMBER')].Attribute
-        attr_variants = attr_number.xpath('AttributeVariant/@type')
-        number = attr_number.AttributeVariant[
-            attr_variants.index('NORMAL')].Text.pyval
-        return number
-
-    def _name(self):
-        """Extract train name."""
-        attr_name = self.journey.JourneyAttributeList.JourneyAttribute[
-            self.attr_types.index('NAME')].Attribute
-        attr_variants = attr_name.xpath('AttributeVariant/@type')
-        name = attr_name.AttributeVariant[
-            attr_variants.index('NORMAL')].Text.pyval
-        return name
-
-    def _direction(self):
-        """Extract train direction."""
-        attr_direction = self.journey.JourneyAttributeList.JourneyAttribute[
-            self.attr_types.index('DIRECTION')].Attribute
-        attr_variants = attr_direction.xpath('AttributeVariant/@type')
-        direction = attr_direction.AttributeVariant[
-            attr_variants.index('NORMAL')].Text.pyval
-        return direction
+        return data
 
     def _info(self):
         """Extract journey information."""
