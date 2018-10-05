@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyRMVtransport",
-    version="0.1.0",
+    version="0.1.1",
     author="cgtobi",
     author_email="cgtobi@gmail.com",
     description="Get transport information from opendata.rmv.de",
