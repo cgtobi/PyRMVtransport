@@ -148,9 +148,8 @@ class RMVJourney(object):
 class RMVtransport(object):
     """Connection data and travel information."""
 
-    def __init__(self, loop, session):
+    def __init__(self, session):
         """Initialize connection data."""
-        self._loop = loop
         self._session = session
 
         self.base_uri = 'http://www.rmv.de/auskunft/bin/jp/'
@@ -203,7 +202,7 @@ class RMVtransport(object):
         url = base_url + urllib.parse.urlencode(params)
 
         try:
-            with async_timeout.timeout(5, loop=self._loop):
+            with async_timeout.timeout(5):
                 response = await self._session.get(url)
 
             _LOGGER.debug(
