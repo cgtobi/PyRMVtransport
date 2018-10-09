@@ -9,6 +9,7 @@ import logging
 import aiohttp
 import async_timeout
 from lxml import objectify
+from lxml import etree
 
 
 PRODUCTS = {
@@ -148,9 +149,10 @@ class RMVJourney(object):
 class RMVtransport(object):
     """Connection data and travel information."""
 
-    def __init__(self, session):
+    def __init__(self, session, timeout = 10):
         """Initialize connection data."""
         self._session = session
+        self._timeout = timeout
 
         self.base_uri = 'http://www.rmv.de/auskunft/bin/jp/'
         self.query_path = 'query.exe/'
@@ -202,7 +204,7 @@ class RMVtransport(object):
         url = base_url + urllib.parse.urlencode(params)
 
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(self._timeout):
                 response = await self._session.get(url)
 
             _LOGGER.debug(
@@ -215,16 +217,16 @@ class RMVtransport(object):
 
         try:
             self.o = objectify.fromstring(xml)
-        except TypeError:
-            _LOGGER.debug("Get from string: %s", xml)
+        except (TypeError, etree.XMLSyntaxError):
+            _LOGGER.debug("Get from string: %s", xml[:100])
             raise RMVtransportError()
 
         try:
             self.now = self.current_time()
             self.station = self._station()
         except (TypeError, AttributeError):
-            print("Time/Station TypeError or AttributeError",
-                  objectify.dump(self.o))
+            _LOGGER.debug("Time/Station TypeError or AttributeError",
+                          objectify.dump(self.o))
             raise RMVtransportError()
 
         self.journeys.clear()

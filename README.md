@@ -17,19 +17,32 @@ $ pip install PyRMVtransport
 ## Usage
 
 ```python
-import RMVtransport
+import asyncio
+import aiohttp
+from RMVtransport import RMVtransport
 
-rmv = RMVtransport.RMVtransport()
+async def main():
+    """The main part of the example script."""
+    async with aiohttp.ClientSession() as session:
+        rmv = RMVtransport(session)
 
-# Departures for station 3006904 (Mainz Hauptbahnhof)
-rmv.get_departures(stationId='3006904')
-rmv.output()
+        # Get the data
+        try:
+            # Departures for station 3006907 (Wiesbaden Hauptbahnhof)
+            # max. 5 results
+            # only specified products (S-Bahn, U-Bahn, Tram)
+            data = await rmv.get_departures(stationId='3006907',
+                                            products=['S', 'U-Bahn', 'Tram'],
+                                            maxJourneys=5)
 
-# Departures in the JSON formating for station 3006907 (Wiesbaden Hauptbahnhof)
-# max. 5 results
-# only specified products (S-Bahn, U-Bahn, Tram)
-data = rmv.get_departures(stationId='3006907',
-                          products=['S', 'U-Bahn', 'Tram'],
-                          maxJourneys=5)
-print(data)
+            # Use the JSON output
+            print(data)
+
+            # or pretty print
+            await rmv.output()
+        except TypeError:
+            pass
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
 ```
