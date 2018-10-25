@@ -10,10 +10,8 @@ matrix:
       env: TOXENV=py36
 
 language: python
-python:
-  - "3.6"
-install: "make init"
-script: "make ci"
+install: pip install -U codecov tox
+script: tox --develop
 cache:
   directories:
   - $HOME/.cache/pip
