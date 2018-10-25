@@ -14,6 +14,10 @@ from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import RMVtransportError
 
 
+URL = 'www.rmv.de'
+URL_PATH = ('/auskunft/bin/jp/stboard.exe/dn')
+
+
 def date_hook(json_dict):
     """JSON datetime parser."""
     for (key, value) in json_dict.items():
@@ -22,10 +26,6 @@ def date_hook(json_dict):
         except (TypeError, ValueError):
             pass
     return json_dict
-
-
-URL = 'www.rmv.de'
-URL_PATH = ('/auskunft/bin/jp/stboard.exe/dn')
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ async def test_departures_products(event_loop, async_rmv_session,
             products = ['S', 'RB']
             data = await rmv.get_departures(stationId,
                                             products=products,
-                                            maxJourneys=50)
+                                            max_journeys=50)
             assert data == result_products_filter_json
 
 
@@ -140,7 +140,7 @@ async def test_departures_error_server(event_loop, async_rmv_session):
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=TypeError)
-async def test_departures_error_server(event_loop, async_rmv_session):
+async def test_departures_error_server2(event_loop, async_rmv_session):
     """Test server error handling."""
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', aresponses.Response(text='error',
@@ -175,15 +175,31 @@ async def test_departures_bad_request(event_loop, async_rmv_session):
 @pytest.mark.xfail(raises=AttributeError)
 async def test_no_journeys(event_loop, async_rmv_session):
     """Test with no journeys."""
-    with open('fixtures/request_no_journeys.xml') as xml_file:
-        xml_request = xml_file.read()
+    with open('fixtures/request_no_journeys.xml') as f:
+        xml = f.read()
 
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
-        arsps.add(URL, URL_PATH, 'get', xml_request)
+        arsps.add(URL, URL_PATH, 'get', xml)
 
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
             stationId = '3006904'
-            data = await rmv.get_departures(stationId)
-            assert data == result
+            await rmv.get_departures(stationId)
+
+
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test_no_timestamp(event_loop, async_rmv_session):
+    """Test with no journeys."""
+    with open('fixtures/request_no_timestamp.xml') as f:
+        xml = f.read()
+
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', xml)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            await rmv.get_departures(stationId)
