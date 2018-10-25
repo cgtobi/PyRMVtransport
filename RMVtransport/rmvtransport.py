@@ -4,7 +4,6 @@ import urllib.request
 import urllib.parse
 from datetime import datetime, timedelta
 import html
-import json
 import logging
 import aiohttp
 import async_timeout
@@ -149,7 +148,7 @@ class RMVJourney(object):
 class RMVtransport(object):
     """Connection data and travel information."""
 
-    def __init__(self, session, timeout = 10):
+    def __init__(self, session, timeout=10):
         """Initialize connection data."""
         self._session = session
         self._timeout = timeout
@@ -179,7 +178,7 @@ class RMVtransport(object):
         self.journeys = []
 
     async def get_departures(self, stationId, directionId=None,
-                       maxJourneys=20, products=ALL):
+                             maxJourneys=20, products=ALL):
         """Fetch data from rmv.de."""
         self.stationId = stationId
         self.directionId = directionId
@@ -205,12 +204,11 @@ class RMVtransport(object):
 
         try:
             with async_timeout.timeout(self._timeout):
-                response = await self._session.get(url)
-
-            _LOGGER.debug(
-                "Response from RMV API: %s", response.status)
-            xml = await response.read()
-            _LOGGER.debug(xml)
+                async with self._session.get(url) as response:
+                    _LOGGER.debug(
+                        "Response from RMV API: %s", response.status)
+                    xml = await response.read()
+                    _LOGGER.debug(xml)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Can not load data from RMV API")
             raise RMVtransportApiConnectionError()
@@ -219,6 +217,7 @@ class RMVtransport(object):
             self.o = objectify.fromstring(xml)
         except (TypeError, etree.XMLSyntaxError):
             _LOGGER.debug("Get from string: %s", xml[:100])
+            print("Get from string: %s" % xml)
             raise RMVtransportError()
 
         try:
@@ -237,10 +236,10 @@ class RMVtransport(object):
             _LOGGER.debug("Extract journeys: %s", self.o.SBRes.Err.get('text'))
             raise RMVtransportError()
 
-        return self.to_json()
+        return self.data()
 
-    def to_json(self):
-        """Return travel data as JSON."""
+    def data(self):
+        """Return travel data."""
         data = {}
         data['station'] = (self.station)
         data['stationId'] = (self.stationId)

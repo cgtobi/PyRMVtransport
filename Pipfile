@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 lxml = "*"
 aiohttp = "*"
+pytest-asyncio = "*"
+aresponses = "*"
 
 [dev-packages]
 tox = "*"
@@ -13,10 +15,13 @@ twine = "*"
 detox = "*"
 pytest-cov = "*"
 pytest-mock = "*"
+pytest-aiohttp = "*"
+asynctest = "*"
 codecov = "*"
 coverage = "*"
 mock = "*"
 "flake8" = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.6"
