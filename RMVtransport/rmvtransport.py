@@ -1,10 +1,14 @@
 """A module to query bus and train departure times."""
+import asyncio
 import urllib.request
 import urllib.parse
 from datetime import datetime, timedelta
 import html
-import json
+import logging
+import aiohttp
+import async_timeout
 from lxml import objectify
+from lxml import etree
 
 
 PRODUCTS = {
@@ -23,6 +27,20 @@ PRODUCTS = {
     'Bahn': 1024,
 }
 ALL = PRODUCTS.keys()
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class RMVtransportError(Exception):
+    """General RMV transport error exception occurred."""
+
+    pass
+
+
+class RMVtransportApiConnectionError(RMVtransportError):
+    """When a connection error is encountered."""
+
+    pass
 
 
 class RMVJourney(object):
@@ -130,8 +148,11 @@ class RMVJourney(object):
 class RMVtransport(object):
     """Connection data and travel information."""
 
-    def __init__(self):
+    def __init__(self, session, timeout=10):
         """Initialize connection data."""
+        self._session = session
+        self._timeout = timeout
+
         self.base_uri = 'http://www.rmv.de/auskunft/bin/jp/'
         self.query_path = 'query.exe/'
         self.getstop_path = 'ajax-getstop.exe/'
@@ -156,8 +177,8 @@ class RMVtransport(object):
         self.o = None
         self.journeys = []
 
-    def get_departures(self, stationId, directionId=None,
-                       maxJourneys=20, products=ALL):
+    async def get_departures(self, stationId, directionId=None,
+                             maxJourneys=20, products=ALL):
         """Fetch data from rmv.de."""
         self.stationId = stationId
         self.directionId = directionId
@@ -180,35 +201,45 @@ class RMVtransport(object):
             params['dirInput'] = self.directionId
 
         url = base_url + urllib.parse.urlencode(params)
-        req = urllib.request.urlopen(url)
-        xml = req.read()
+
+        try:
+            with async_timeout.timeout(self._timeout):
+                async with self._session.get(url) as response:
+                    _LOGGER.debug(
+                        "Response from RMV API: %s", response.status)
+                    xml = await response.read()
+                    _LOGGER.debug(xml)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Can not load data from RMV API")
+            raise RMVtransportApiConnectionError()
 
         try:
             self.o = objectify.fromstring(xml)
-        except TypeError:
-            print("Get from string", xml)
-            raise
+        except (TypeError, etree.XMLSyntaxError):
+            _LOGGER.debug("Get from string: %s", xml[:100])
+            print("Get from string: %s" % xml)
+            raise RMVtransportError()
 
         try:
             self.now = self.current_time()
             self.station = self._station()
         except (TypeError, AttributeError):
-            print("Time/Station TypeError or AttributeError",
-                  objectify.dump(self.o))
-            raise
+            _LOGGER.debug("Time/Station TypeError or AttributeError",
+                          objectify.dump(self.o))
+            raise RMVtransportError()
 
         self.journeys.clear()
         try:
             for journey in self.o.SBRes.JourneyList.Journey:
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
-            print("Extract journeys", self.o.SBRes.Err.get('text'))
-            raise
+            _LOGGER.debug("Extract journeys: %s", self.o.SBRes.Err.get('text'))
+            raise RMVtransportError()
 
-        return self.to_json()
+        return self.data()
 
-    def to_json(self):
-        """Return travel data as JSON."""
+    def data(self):
+        """Return travel data."""
         data = {}
         data['station'] = (self.station)
         data['stationId'] = (self.stationId)

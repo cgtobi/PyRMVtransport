@@ -1,13 +1,17 @@
 """Define tests for the client object."""
-# pylint: disable=redefined-outer-name,unused-import
-import json
 from datetime import datetime
-from lxml import etree
+import json
+import aiohttp
 
-import mock
+from asynctest import MagicMock, patch, CoroutineMock
+
 import pytest
+import pytest_asyncio.plugin
 
-import RMVtransport
+import aresponses
+
+from RMVtransport import RMVtransport
+from RMVtransport.rmvtransport import RMVtransportError
 
 
 def date_hook(json_dict):
@@ -20,142 +24,166 @@ def date_hook(json_dict):
     return json_dict
 
 
-@mock.patch('urllib.request.urlopen')
-def test_getdepartures(mock_urlopen, capsys):
-    """Test departures with defautl setings."""
-    with open('fixtures/request.xml') as xml_file:
-        xml = xml_file.read()
-    with open('fixtures/result_simple.json') as json_file:
-        result = json.load(json_file, object_hook=date_hook)
-    with open('fixtures/result_simple.txt') as txt_file:
-        output_result = txt_file.read()
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 200
-    cm.read.return_value = xml
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
-
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    data = rmv.get_departures(stationId)
-    assert data == result
-
-    rmv.output()
-    out, err = capsys.readouterr()
-    assert out == output_result
+URL = 'www.rmv.de'
+URL_PATH = ('/auskunft/bin/jp/stboard.exe/dn')
 
 
-@mock.patch('urllib.request.urlopen')
-def test_departures_products(mock_urlopen):
+@pytest.fixture
+async def async_rmv_session():
+    async with aiohttp.ClientSession() as session:
+        return RMVtransport(session)
+
+
+@pytest.fixture
+def xml_request():
+    with open('fixtures/request.xml') as f:
+        return f.read()
+
+
+@pytest.fixture
+def result_products_filter_json():
+    with open('fixtures/result_products_filter.json') as f:
+        return json.load(f, object_hook=date_hook)
+
+
+@pytest.fixture
+def result_simple_json():
+    with open('fixtures/result_simple.json') as f:
+        return json.load(f, object_hook=date_hook)
+
+
+@pytest.fixture
+def result_text():
+    with open('fixtures/result_simple.txt') as f:
+        return f.read()
+
+
+@pytest.mark.asyncio
+async def test_getdepartures(event_loop, async_rmv_session, xml_request,
+                             result_simple_json, result_text, capsys):
+    """Test departures with default setings."""
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', xml_request)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            data = await rmv.get_departures(stationId)
+            assert data == result_simple_json
+
+            rmv.output()
+            out, err = capsys.readouterr()
+            assert out == result_text
+
+
+@pytest.mark.asyncio
+async def test_departures_products(event_loop, async_rmv_session,
+                                   xml_request, result_products_filter_json):
     """Test products filter."""
-    with open('fixtures/request.xml') as xml_file:
-        xml = xml_file.read()
-    with open('fixtures/result_products_filter.json') as json_file:
-        result = json.load(json_file, object_hook=date_hook)
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 200
-    cm.read.return_value = xml
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', xml_request)
 
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    products = ['S', 'RB']
-    data = rmv.get_departures(stationId, products=products, maxJourneys=50)
-    assert data == result
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            products = ['S', 'RB']
+            data = await rmv.get_departures(stationId,
+                                            products=products,
+                                            maxJourneys=50)
+            assert data == result_products_filter_json
 
 
-@pytest.mark.xfail(raises=AttributeError)
-@mock.patch('urllib.request.urlopen')
-def test_departures_error_xml(mock_urlopen):
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test_departures_error_xml(event_loop, async_rmv_session):
     """Test with bad xml."""
-    xml = "<ResC></ResC>"
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 200
-    cm.read.return_value = xml
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', '<ResC></ResC>')
 
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    rmv.get_departures(stationId)
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            await rmv.get_departures(stationId)
 
 
-@pytest.mark.xfail(raises=etree.XMLSyntaxError)
-@mock.patch('urllib.request.urlopen')
-def test_no_xml(mock_urlopen):
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test_no_xml(event_loop, async_rmv_session):
     """Test with empty xml."""
-    xml = ''
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 200
-    cm.read.return_value = xml
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', '')
 
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    rmv.get_departures(stationId)
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            await rmv.get_departures(stationId)
 
 
-@pytest.mark.xfail(raises=ValueError)
-@mock.patch('urllib.request.urlopen')
-def test_departures_error_server(mock_urlopen):
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test_departures_error_server(event_loop, async_rmv_session):
     """Test server error handling."""
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 500
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', aresponses.Response(text='error',
+                                                            status=500))
 
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    rmv.get_departures(stationId)
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            await rmv.get_departures(stationId)
 
 
+@pytest.mark.asyncio
 @pytest.mark.xfail(raises=TypeError)
-@mock.patch('urllib.request.urlopen')
-def test_departures_error_missing_argument(mock_urlopen):
-    """Test missing argument handling."""
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 500
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
+async def test_departures_error_server(event_loop, async_rmv_session):
+    """Test server error handling."""
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', aresponses.Response(text='error',
+                                                            status=500))
 
-    rmv = RMVtransport.RMVtransport()
-    rmv.get_departures()
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+            await rmv.get_departures()
 
 
-@mock.patch('urllib.request.urlopen')
-def test_departures_bad_request(mock_urlopen):
+@pytest.mark.asyncio
+async def test_departures_bad_request(event_loop, async_rmv_session):
     """Test bad xml."""
     with open('fixtures/bad_request.xml') as xml_file:
-        xml = xml_file.read()
+        xml_request = xml_file.read()
     with open('fixtures/result_bad.json') as json_file:
         result = json.load(json_file, object_hook=date_hook)
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 200
-    cm.read.return_value = xml
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
 
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    directionId = '3006905'
-    data = rmv.get_departures(stationId, directionId)
-    assert data == result
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', xml_request)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            directionId = '3006905'
+            data = await rmv.get_departures(stationId, directionId)
+            assert data == result
 
 
+@pytest.mark.asyncio
 @pytest.mark.xfail(raises=AttributeError)
-@mock.patch('urllib.request.urlopen')
-def test_no_journeys(mock_urlopen):
+async def test_no_journeys(event_loop, async_rmv_session):
     """Test with no journeys."""
     with open('fixtures/request_no_journeys.xml') as xml_file:
-        xml = xml_file.read()
-    cm = mock.MagicMock()
-    cm.getcode.return_value = 200
-    cm.read.return_value = xml
-    cm.__enter__.return_value = cm
-    mock_urlopen.return_value = cm
+        xml_request = xml_file.read()
 
-    rmv = RMVtransport.RMVtransport()
-    stationId = '3006904'
-    data = rmv.get_departures(stationId)
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', xml_request)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            data = await rmv.get_departures(stationId)
+            assert data == result

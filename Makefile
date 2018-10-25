@@ -1,3 +1,4 @@
+.PHONY: ci coverage flake8 init build publish clean test
 ci:
 	pipenv run py.test --junitxml=report.xml
 coverage:
@@ -8,8 +9,10 @@ init:
 	pip install --upgrade pip pipenv
 	pipenv lock
 	pipenv install --dev
-publish:
+build:
 	python3 setup.py sdist bdist_wheel
+publish:
+	build
 	pipenv run twine upload dist/*
 	clean
 clean:
