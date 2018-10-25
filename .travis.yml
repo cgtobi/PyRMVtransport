@@ -1,14 +1,19 @@
+---
 sudo: false
-language: python
-python:
-  - "3.6"
-install: "make init"
-script: "make ci"
-cache: "pip"
-jobs:
+matrix:
+  fast_finish: true
   include:
-    - stage: "coverage"
-      python: "3.6"
-      script: "pipenv run codecov"
-after_success:
-  - codecov
+    - python: "3.6"
+      env: TOXENV=cov
+      after_success: codecov
+    - python: "3.6"
+      env: TOXENV=lint
+    - python: "3.6"
+      env: TOXENV=py36
+
+language: python
+install: pip install -U codecov tox
+script: tox --develop
+cache:
+  directories:
+  - $HOME/.cache/pip

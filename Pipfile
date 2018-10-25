@@ -8,6 +8,7 @@ lxml = "*"
 aiohttp = "*"
 pytest-asyncio = "*"
 aresponses = "*"
+pylint = "*"
 
 [dev-packages]
 tox = "*"
