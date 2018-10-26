@@ -7,14 +7,18 @@ import logging
 from typing import List, Dict, Any, Optional, Union
 import aiohttp
 import async_timeout
-from lxml import objectify  # type: ignore
-from lxml import etree
+from lxml import objectify, etree  # type: ignore
 
 from .errors import RMVtransportError, RMVtransportApiConnectionError
 from .rmvjourney import RMVJourney
 from .const import PRODUCTS, ALL_PRODUCTS
 
 _LOGGER = logging.getLogger(__name__)
+
+BASE_URI: str = 'http://www.rmv.de/auskunft/bin/jp/'
+QUERY_PATH: str = 'query.exe/'
+GETSTOP_PATH: str = 'ajax-getstop.exe/'
+STBOARD_PATH: str = 'stboard.exe/'
 
 
 class RMVtransport():
@@ -27,23 +31,11 @@ class RMVtransport():
         self._session: aiohttp.ClientSession = session
         self._timeout: int = timeout
 
-        self.base_uri: str = 'http://www.rmv.de/auskunft/bin/jp/'
-        self.query_path: str = 'query.exe/'
-        self.getstop_path: str = 'ajax-getstop.exe/'
-        self.stboard_path: str = 'stboard.exe/'
-
-        self.lang: str = 'd'
-        self.type: str = 'n'
-        self.with_suggestions: str = '?'
-
-        # self.http_headers: Dict = {}
-
         self.now: datetime
-        # self.timezone: str = 'CET'
 
         self.station: str
         self.station_id: str
-        self.direction_id: Optional[str] = None
+        self.direction_id: Optional[str]
         self.products_filter: str
 
         self.max_journeys: int
@@ -64,7 +56,7 @@ class RMVtransport():
 
         self.products_filter: str = _product_filter(products or ALL_PRODUCTS)
 
-        base_url: str = self._base_url()
+        base_url: str = _base_url()
         params: Dict[str, Union[str, int]] = {
             'selectDate':     'today',
             'time':           'now',
@@ -143,11 +135,6 @@ class RMVtransport():
         data['journeys'] = (journeys)
         return data
 
-    def _base_url(self) -> str:
-        """Build base url."""
-        return (self.base_uri + self.stboard_path + self.lang +
-                self.type + self.with_suggestions)
-
     def _station(self) -> str:
         """Extract station name."""
         return self.obj.SBRes.SBReq.Start.Station.HafasName.Text.pyval
@@ -187,3 +174,11 @@ def _product_filter(products) -> str:
     for product in {PRODUCTS[p] for p in products}:
         _filter += product
     return format(_filter, 'b')[::-1]
+
+
+def _base_url() -> str:
+    """Build base url."""
+    _lang: str = 'd'
+    _type: str = 'n'
+    _with_suggestions: str = '?'
+    return BASE_URI + STBOARD_PATH + _lang + _type + _with_suggestions
