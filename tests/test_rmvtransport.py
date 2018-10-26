@@ -140,8 +140,8 @@ async def test_departures_error_server(event_loop, async_rmv_session):
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=TypeError)
-async def test_departures_error_server2(event_loop, async_rmv_session):
-    """Test server error handling."""
+async def test_no_station_id(event_loop, async_rmv_session):
+    """Test no station_id error handling."""
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', aresponses.Response(text='error',
                                                             status=500))
