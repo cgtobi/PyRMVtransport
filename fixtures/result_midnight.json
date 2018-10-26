@@ -4,7 +4,7 @@
   "filter": "11111111111",
   "journeys": [{
     "product": "Bus",
-    "number": 54,
+    "number": "54",
     "trainId": "2746308001",
     "direction": "Ginsheim-Gustavsburg-Ginsheim Friedr.-Ebert-Platz",
     "departure_time": "2018-08-31T00:16:00",

@@ -38,7 +38,7 @@ class RMVJourney():
     def _platform(self) -> Optional[str]:
         """Extract platform."""
         try:
-            return self.journey.MainStop.BasicStop.Dep.Platform.text
+            return str(self.journey.MainStop.BasicStop.Dep.Platform.text)
         except AttributeError:
             return None
 
@@ -68,29 +68,29 @@ class RMVJourney():
         """Calculate actual minutes left for departure."""
         return round((self.real_departure_time - self.now).seconds / 60)
 
-    def _extract(self, attribute):
+    def _extract(self, attribute) -> str:
         """Extract train information."""
         attr_data = self.journey.JourneyAttributeList.JourneyAttribute[
             self.attr_types.index(attribute)].Attribute
         attr_variants = attr_data.xpath('AttributeVariant/@type')
         data = attr_data.AttributeVariant[
             attr_variants.index('NORMAL')].Text.pyval
-        return data
+        return str(data)
 
     def _info(self) -> Optional[str]:
         """Extract journey information."""
         try:
-            return html.unescape(
-                self.journey.InfoTextList.InfoText.get('text'))
+            return str(html.unescape(
+                self.journey.InfoTextList.InfoText.get('text')))
         except AttributeError:
             return None
 
     def _info_long(self) -> Optional[str]:
         """Extract journey information."""
         try:
-            return html.unescape(
+            return str(html.unescape(
                 self.journey.InfoTextList.InfoText.get('textL')
-                ).replace('<br />', '\n')
+                ).replace('<br />', '\n'))
         except AttributeError:
             return None
 
