@@ -8,6 +8,7 @@ setuptools.setup(
     version="0.2.0",
     author="cgtobi",
     author_email="cgtobi@gmail.com",
+    python_requires=">=3.6.0",
     description="Get transport information from opendata.rmv.de",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -19,7 +20,9 @@ setuptools.setup(
     ],
     license='MIT',
     classifiers=(
+        "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
