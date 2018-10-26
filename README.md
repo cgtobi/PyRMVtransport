@@ -32,9 +32,9 @@ async def main():
             # Departures for station 3006907 (Wiesbaden Hauptbahnhof)
             # max. 5 results
             # only specified products (S-Bahn, U-Bahn, Tram)
-            data = await rmv.get_departures(stationId='3006907',
+            data = await rmv.get_departures(station_id='3006907',
                                             products=['S', 'U-Bahn', 'Tram'],
-                                            maxJourneys=5)
+                                            max_journeys=5)
 
             # Use the JSON output
             print(data)
