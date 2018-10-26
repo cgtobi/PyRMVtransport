@@ -15,9 +15,9 @@
           </HafasName>
         </Station>
       </Start>
-      <StartT time="23:17" date="20180830"/>
-      <EndT time="23:32" date="20180830"/>
     </SBReq>
+    <JourneyList>
+    </JourneyList>
     <NextUpdate time="23:18" date="20180830"/>
   </SBRes>
 </ResC>

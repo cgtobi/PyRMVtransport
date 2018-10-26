@@ -16,3 +16,6 @@ test:
 	pipenv run py.test tests
 lint:
 	pipenv run flake8 RMVtransport
+	pipenv run pylint RMVtransport
+typing:
+	pipenv run mypy RMVtransport

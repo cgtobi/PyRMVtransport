@@ -1,2 +1,3 @@
 """Define module-level imports."""
-from RMVtransport.rmvtransport import RMVtransport  # noqa
+# pylint: disable=C0103
+from .rmvtransport import RMVtransport  # noqa
