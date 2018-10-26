@@ -21,7 +21,7 @@ class RMVJourney():
             '*/Attribute/@type')
 
         self.name: str = self._extract('NAME')
-        self.number: int = int(self._extract('NUMBER'))
+        self.number: str = self._extract('NUMBER')
         self.product: str = self._extract('CATEGORY')
         self.train_id: str = self.journey.get('trainId')
         self.departure: datetime = self._departure()
