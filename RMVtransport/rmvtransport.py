@@ -45,9 +45,9 @@ class RMVtransport():
 
     async def get_departures(self,
                              station_id: str,
-                             direction_id: str = None,
+                             direction_id: Optional[str] = None,
                              max_journeys: int = 20,
-                             products: List[str] = None) -> Dict[str, Any]:
+                             products: Optional[List[str]] = None) -> Dict[str, Any]:
         """Fetch data from rmv.de."""
         self.station_id: str = station_id
         self.direction_id: str = direction_id
@@ -137,7 +137,7 @@ class RMVtransport():
 
     def _station(self) -> str:
         """Extract station name."""
-        return self.obj.SBRes.SBReq.Start.Station.HafasName.Text.pyval
+        return str(self.obj.SBRes.SBReq.Start.Station.HafasName.Text.pyval)
 
     def current_time(self) -> datetime:
         """Extract current time."""
