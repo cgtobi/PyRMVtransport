@@ -2,151 +2,19 @@
 import asyncio
 import urllib.request
 import urllib.parse
-from datetime import datetime, timedelta
-import html
+from datetime import datetime
 import logging
 from typing import List, Dict, Any, Optional, Union
 import aiohttp
 import async_timeout
-from lxml import objectify
+from lxml import objectify  # type: ignore
 from lxml import etree
 
-
-PRODUCTS: Dict[str, int] = {
-    'ICE': 1,
-    'IC': 2,
-    'EC': 2,
-    'RB': 4,
-    'RE': 4,
-    'S': 8,
-    'U-Bahn': 16,
-    'Tram': 32,
-    'Bus': 64,
-    'Bus2': 128,
-    'Fähre': 256,
-    'Taxi': 512,
-    'Bahn': 1024,
-}
-ALL_PRODUCTS: List[str] = list(PRODUCTS.keys())
+from .errors import RMVtransportError, RMVtransportApiConnectionError
+from .rmvjourney import RMVJourney
+from .const import PRODUCTS, ALL_PRODUCTS
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class RMVtransportError(Exception):
-    """General RMV transport error exception occurred."""
-
-    pass
-
-
-class RMVtransportApiConnectionError(RMVtransportError):
-    """When a connection error is encountered."""
-
-    pass
-
-
-class RMVJourney():
-    """A journey object to hold information about a journey."""
-
-    # pylint: disable=I1101
-    def __init__(self,
-                 journey: objectify.ObjectifiedElement,
-                 now: datetime) -> None:
-        """Initialize the journey object."""
-        self.journey: objectify.ObjectifiedElement = journey
-        self.now: datetime = now
-        self.attr_types = self.journey.JourneyAttributeList.xpath(
-            '*/Attribute/@type')
-
-        self.name: str = self._extract('NAME')
-        self.number: str = self._extract('NUMBER')
-        self.product: str = self._extract('CATEGORY')
-        self.train_id: str = self.journey.get('trainId')
-        self.departure: datetime = self._departure()
-        self.delay: int = self._delay()
-        self.real_departure_time: datetime = self._real_departure_time()
-        self.real_departure: int = self._real_departure()
-        self.direction = self._extract('DIRECTION')
-        self.info = self._info()
-        self.info_long = self._info_long()
-        self.platform = self._platform()
-        self.stops = self._pass_list()
-        self.icon = self._icon()
-
-    def _platform(self) -> Optional[str]:
-        """Extract platform."""
-        try:
-            return self.journey.MainStop.BasicStop.Dep.Platform.text
-        except AttributeError:
-            return None
-
-    def _delay(self) -> int:
-        """Extract departure delay."""
-        try:
-            return int(self.journey.MainStop.BasicStop.Dep.Delay.text)
-        except AttributeError:
-            return 0
-
-    def _departure(self) -> datetime:
-        """Extract departure time."""
-        departure_time = datetime.strptime(
-            self.journey.MainStop.BasicStop.Dep.Time.text,
-            '%H:%M').time()
-        if departure_time > (self.now - timedelta(hours=1)).time():
-            return datetime.combine(self.now.date(),
-                                    departure_time)
-        return datetime.combine(self.now.date() + timedelta(days=1),
-                                departure_time)
-
-    def _real_departure_time(self) -> datetime:
-        """Calculate actual departure time."""
-        return self.departure + timedelta(minutes=self.delay)
-
-    def _real_departure(self) -> int:
-        """Calculate actual minutes left for departure."""
-        return round((self.real_departure_time - self.now).seconds / 60)
-
-    def _extract(self, attribute):
-        """Extract train information."""
-        attr_data = self.journey.JourneyAttributeList.JourneyAttribute[
-            self.attr_types.index(attribute)].Attribute
-        attr_variants = attr_data.xpath('AttributeVariant/@type')
-        data = attr_data.AttributeVariant[
-            attr_variants.index('NORMAL')].Text.pyval
-        return data
-
-    def _info(self) -> Optional[str]:
-        """Extract journey information."""
-        try:
-            return html.unescape(
-                self.journey.InfoTextList.InfoText.get('text'))
-        except AttributeError:
-            return None
-
-    def _info_long(self) -> Optional[str]:
-        """Extract journey information."""
-        try:
-            return html.unescape(
-                self.journey.InfoTextList.InfoText.get('textL')
-                ).replace('<br />', '\n')
-        except AttributeError:
-            return None
-
-    def _pass_list(self) -> List[Dict[str, Any]]:
-        """Extract next stops along the journey."""
-        stops: List[Dict[str, Any]] = []
-        for stop in self.journey.PassList.BasicStop:
-            index = stop.get('index')
-            station = stop.Location.Station.HafasName.Text.text
-            station_id = stop.Location.Station.ExternalId.text
-            stops.append({'index': index,
-                          'stationId': station_id,
-                          'station': station})
-        return stops
-
-    def _icon(self) -> str:
-        """Extract product icon."""
-        pic_url = "https://www.rmv.de/auskunft/s/n/img/products/%i_pic.png"
-        return pic_url % PRODUCTS[self.product]
 
 
 class RMVtransport():
@@ -245,7 +113,7 @@ class RMVtransport():
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
             _LOGGER.debug("Extract journeys: %s",
-                          self.obj.SBRes.Err.get('text'))
+                          objectify.dump(self.obj.SBRes))
             raise RMVtransportError()
 
         return self.data()
@@ -286,14 +154,11 @@ class RMVtransport():
 
     def current_time(self) -> datetime:
         """Extract current time."""
-        try:
-            _date = datetime.strptime(
-                self.obj.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
-            _time = datetime.strptime(
-                self.obj.SBRes.SBReq.StartT.get("time"), '%H:%M')
-            return datetime.combine(_date.date(), _time.time())
-        except AttributeError:
-            raise RMVtransportError
+        _date = datetime.strptime(
+            self.obj.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
+        _time = datetime.strptime(
+            self.obj.SBRes.SBReq.StartT.get("time"), '%H:%M')
+        return datetime.combine(_date.date(), _time.time())
 
     def output(self) -> None:
         """Pretty print travel times."""

@@ -9,6 +9,8 @@ matrix:
     - python: "3.6"
       env: TOXENV=lint
     - python: "3.6"
+      env: TOXENV=typing
+    - python: "3.6"
       env: TOXENV=py36
 
 language: python

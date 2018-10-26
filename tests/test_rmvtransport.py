@@ -29,39 +29,18 @@ def date_hook(json_dict):
 
 
 @pytest.fixture
-async def async_rmv_session():
-    async with aiohttp.ClientSession() as session:
-        return RMVtransport(session)
-
-
-@pytest.fixture
 def xml_request():
     with open('fixtures/request.xml') as f:
         return f.read()
 
 
-@pytest.fixture
-def result_products_filter_json():
-    with open('fixtures/result_products_filter.json') as f:
-        return json.load(f, object_hook=date_hook)
-
-
-@pytest.fixture
-def result_simple_json():
-    with open('fixtures/result_simple.json') as f:
-        return json.load(f, object_hook=date_hook)
-
-
-@pytest.fixture
-def result_text():
-    with open('fixtures/result_simple.txt') as f:
-        return f.read()
-
-
 @pytest.mark.asyncio
-async def test_getdepartures(event_loop, async_rmv_session, xml_request,
-                             result_simple_json, result_text, capsys):
+async def test_getdepartures(event_loop, xml_request, capsys):
     """Test departures with default setings."""
+    with open('fixtures/result_simple.json') as f:
+        result_simple_json = json.load(f, object_hook=date_hook)
+    with open('fixtures/result_simple.txt') as f:
+        result_text = f.read()
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', xml_request)
 
@@ -78,9 +57,10 @@ async def test_getdepartures(event_loop, async_rmv_session, xml_request,
 
 
 @pytest.mark.asyncio
-async def test_departures_products(event_loop, async_rmv_session,
-                                   xml_request, result_products_filter_json):
+async def test_departures_products(event_loop, xml_request):
     """Test products filter."""
+    with open('fixtures/result_products_filter.json') as f:
+        result_products_filter_json = json.load(f, object_hook=date_hook)
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', xml_request)
 
@@ -97,7 +77,7 @@ async def test_departures_products(event_loop, async_rmv_session,
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_departures_error_xml(event_loop, async_rmv_session):
+async def test_departures_error_xml(event_loop):
     """Test with bad xml."""
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', '<ResC></ResC>')
@@ -111,7 +91,7 @@ async def test_departures_error_xml(event_loop, async_rmv_session):
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_no_xml(event_loop, async_rmv_session):
+async def test_no_xml(event_loop):
     """Test with empty xml."""
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', '')
@@ -125,7 +105,7 @@ async def test_no_xml(event_loop, async_rmv_session):
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_departures_error_server(event_loop, async_rmv_session):
+async def test_departures_error_server(event_loop):
     """Test server error handling."""
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', aresponses.Response(text='error',
@@ -140,7 +120,7 @@ async def test_departures_error_server(event_loop, async_rmv_session):
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=TypeError)
-async def test_no_station_id(event_loop, async_rmv_session):
+async def test_no_station_id(event_loop):
     """Test no station_id error handling."""
     async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
         arsps.add(URL, URL_PATH, 'get', aresponses.Response(text='error',
@@ -152,7 +132,7 @@ async def test_no_station_id(event_loop, async_rmv_session):
 
 
 @pytest.mark.asyncio
-async def test_departures_bad_request(event_loop, async_rmv_session):
+async def test_departures_bad_request(event_loop):
     """Test bad xml."""
     with open('fixtures/bad_request.xml') as xml_file:
         xml_request = xml_file.read()
@@ -172,8 +152,8 @@ async def test_departures_bad_request(event_loop, async_rmv_session):
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(raises=AttributeError)
-async def test_no_journeys(event_loop, async_rmv_session):
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test_no_journeys(event_loop):
     """Test with no journeys."""
     with open('fixtures/request_no_journeys.xml') as f:
         xml = f.read()
@@ -190,8 +170,8 @@ async def test_no_journeys(event_loop, async_rmv_session):
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_no_timestamp(event_loop, async_rmv_session):
-    """Test with no journeys."""
+async def test_no_timestamp(event_loop):
+    """Test with no timestamp."""
     with open('fixtures/request_no_timestamp.xml') as f:
         xml = f.read()
 
@@ -203,3 +183,22 @@ async def test_no_timestamp(event_loop, async_rmv_session):
 
             stationId = '3006904'
             await rmv.get_departures(stationId)
+
+
+@pytest.mark.asyncio
+async def test_midnight(event_loop):
+    """Test departures around midnight."""
+    with open('fixtures/request_midnight.xml') as f:
+        xml = f.read()
+    with open('fixtures/result_midnight.json') as f:
+        result = json.load(f, object_hook=date_hook)
+
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_PATH, 'get', xml)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            stationId = '3006904'
+            data = await rmv.get_departures(stationId)
+            assert data == result
