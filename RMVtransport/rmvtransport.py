@@ -43,11 +43,12 @@ class RMVtransport():
         self.obj: objectify.ObjectifiedElement  # pylint: disable=I1101
         self.journeys: List[RMVJourney] = []
 
-    async def get_departures(self,
-                             station_id: str,
-                             direction_id: Optional[str] = None,
-                             max_journeys: int = 20,
-                             products: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def get_departures(
+            self,
+            station_id: str,
+            direction_id: Optional[str] = None,
+            max_journeys: int = 20,
+            products: Optional[List[str]] = None) -> Dict[str, Any]:
         """Fetch data from rmv.de."""
         self.station_id: str = station_id
         self.direction_id: str = direction_id
