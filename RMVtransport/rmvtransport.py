@@ -15,18 +15,16 @@ from .const import PRODUCTS, ALL_PRODUCTS
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_URI: str = 'http://www.rmv.de/auskunft/bin/jp/'
-QUERY_PATH: str = 'query.exe/'
-GETSTOP_PATH: str = 'ajax-getstop.exe/'
-STBOARD_PATH: str = 'stboard.exe/'
+BASE_URI: str = "http://www.rmv.de/auskunft/bin/jp/"
+QUERY_PATH: str = "query.exe/"
+GETSTOP_PATH: str = "ajax-getstop.exe/"
+STBOARD_PATH: str = "stboard.exe/"
 
 
-class RMVtransport():
+class RMVtransport:
     """Connection data and travel information."""
 
-    def __init__(self,
-                 session: aiohttp.ClientSession,
-                 timeout: int = 10) -> None:
+    def __init__(self, session: aiohttp.ClientSession, timeout: int = 10) -> None:
         """Initialize connection data."""
         self._session: aiohttp.ClientSession = session
         self._timeout: int = timeout
@@ -44,11 +42,12 @@ class RMVtransport():
         self.journeys: List[RMVJourney] = []
 
     async def get_departures(
-            self,
-            station_id: str,
-            direction_id: Optional[str] = None,
-            max_journeys: int = 20,
-            products: Optional[List[str]] = None) -> Dict[str, Any]:
+        self,
+        station_id: str,
+        direction_id: Optional[str] = None,
+        max_journeys: int = 20,
+        products: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """Fetch data from rmv.de."""
         self.station_id: str = station_id
         self.direction_id: str = direction_id
@@ -59,25 +58,25 @@ class RMVtransport():
 
         base_url: str = _base_url()
         params: Dict[str, Union[str, int]] = {
-            'selectDate':     'today',
-            'time':           'now',
-            'input':          self.station_id,
-            'maxJourneys':    self.max_journeys,
-            'boardType':      'dep',
-            'productsFilter': self.products_filter,
-            'disableEquivs':  'discard_nearby',
-            'output':         'xml',
-            'start':          'yes'}
+            "selectDate": "today",
+            "time": "now",
+            "input": self.station_id,
+            "maxJourneys": self.max_journeys,
+            "boardType": "dep",
+            "productsFilter": self.products_filter,
+            "disableEquivs": "discard_nearby",
+            "output": "xml",
+            "start": "yes",
+        }
         if self.direction_id:
-            params['dirInput'] = self.direction_id
+            params["dirInput"] = self.direction_id
 
         url = base_url + urllib.parse.urlencode(params)
 
         try:
             with async_timeout.timeout(self._timeout):
                 async with self._session.get(url) as response:
-                    _LOGGER.debug(
-                        "Response from RMV API: %s", response.status)
+                    _LOGGER.debug("Response from RMV API: %s", response.status)
                     xml = await response.read()
                     _LOGGER.debug(xml)
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -96,8 +95,9 @@ class RMVtransport():
             self.now = self.current_time()
             self.station = self._station()
         except (TypeError, AttributeError):
-            _LOGGER.debug("Time/Station TypeError or AttributeError %s",
-                          objectify.dump(self.obj))
+            _LOGGER.debug(
+                "Time/Station TypeError or AttributeError %s", objectify.dump(self.obj)
+            )
             raise RMVtransportError()
 
         self.journeys.clear()
@@ -105,8 +105,7 @@ class RMVtransport():
             for journey in self.obj.SBRes.JourneyList.Journey:
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
-            _LOGGER.debug("Extract journeys: %s",
-                          objectify.dump(self.obj.SBRes))
+            _LOGGER.debug("Extract journeys: %s", objectify.dump(self.obj.SBRes))
             raise RMVtransportError()
 
         return self.data()
@@ -114,26 +113,30 @@ class RMVtransport():
     def data(self) -> Dict[str, Any]:
         """Return travel data."""
         data: Dict[str, Any] = {}
-        data['station'] = (self.station)
-        data['stationId'] = (self.station_id)
-        data['filter'] = (self.products_filter)
+        data["station"] = self.station
+        data["stationId"] = self.station_id
+        data["filter"] = self.products_filter
 
         journeys = []
-        for j in sorted(
-                self.journeys,
-                key=lambda k: k.real_departure)[:self.max_journeys]:
-            journeys.append({'product': j.product,
-                             'number': j.number,
-                             'trainId': j.train_id,
-                             'direction': j.direction,
-                             'departure_time': j.real_departure_time,
-                             'minutes': j.real_departure,
-                             'delay': j.delay,
-                             'stops': [s['station'] for s in j.stops],
-                             'info': j.info,
-                             'info_long': j.info_long,
-                             'icon': j.icon})
-        data['journeys'] = (journeys)
+        for j in sorted(self.journeys, key=lambda k: k.real_departure)[
+            : self.max_journeys
+        ]:
+            journeys.append(
+                {
+                    "product": j.product,
+                    "number": j.number,
+                    "trainId": j.train_id,
+                    "direction": j.direction,
+                    "departure_time": j.real_departure_time,
+                    "minutes": j.real_departure,
+                    "delay": j.delay,
+                    "stops": [s["station"] for s in j.stops],
+                    "info": j.info,
+                    "info_long": j.info_long,
+                    "icon": j.icon,
+                }
+            )
+        data["journeys"] = journeys
         return data
 
     def _station(self) -> str:
@@ -142,10 +145,8 @@ class RMVtransport():
 
     def current_time(self) -> datetime:
         """Extract current time."""
-        _date = datetime.strptime(
-            self.obj.SBRes.SBReq.StartT.get("date"), '%Y%m%d')
-        _time = datetime.strptime(
-            self.obj.SBRes.SBReq.StartT.get("time"), '%H:%M')
+        _date = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("date"), "%Y%m%d")
+        _time = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("time"), "%H:%M")
         return datetime.combine(_date.date(), _time.time())
 
     def output(self) -> None:
@@ -153,16 +154,15 @@ class RMVtransport():
         print("%s - %s" % (self.station, self.now))
         print(self.products_filter)
 
-        for j in sorted(
-                self.journeys,
-                key=lambda k: k.real_departure)[:self.max_journeys]:
+        for j in sorted(self.journeys, key=lambda k: k.real_departure)[
+            : self.max_journeys
+        ]:
             print("-------------")
             print("%s: %s (%s)" % (j.product, j.number, j.train_id))
             print("Richtung: %s" % (j.direction))
             print("Abfahrt in %i min." % (j.real_departure))
             print("Abfahrt %s (+%i)" % (j.departure.time(), j.delay))
-            print("Nächste Haltestellen: %s" % (
-                [s['station'] for s in j.stops]))
+            print("Nächste Haltestellen: %s" % ([s["station"] for s in j.stops]))
             if j.info:
                 print("Hinweis: %s" % (j.info))
                 print("Hinweis (lang): %s" % (j.info_long))
@@ -174,12 +174,12 @@ def _product_filter(products) -> str:
     _filter = 0
     for product in {PRODUCTS[p] for p in products}:
         _filter += product
-    return format(_filter, 'b')[::-1]
+    return format(_filter, "b")[::-1]
 
 
 def _base_url() -> str:
     """Build base url."""
-    _lang: str = 'd'
-    _type: str = 'n'
-    _with_suggestions: str = '?'
+    _lang: str = "d"
+    _type: str = "n"
+    _with_suggestions: str = "?"
     return BASE_URI + STBOARD_PATH + _lang + _type + _with_suggestions
