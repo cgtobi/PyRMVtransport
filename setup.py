@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyRMVtransport",
-    version="0.2.2",
+    version="0.2.3",
     author="cgtobi",
     author_email="cgtobi@gmail.com",
     python_requires=">=3.6.0",
