@@ -35,7 +35,8 @@ disable=
   too-many-statements,
   unnecessary-pass,
   unused-argument,
-  C0330
+  C0330,
+  W1203
 
 [REPORTS]
 reports=no

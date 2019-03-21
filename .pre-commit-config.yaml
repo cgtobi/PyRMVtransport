@@ -20,8 +20,3 @@ repos:
       entry: mypy
       types: [python]
       exclude: tests/
-    - id: pytest
-      name: pytest
-      language: system
-      entry: pytest
-      types: [python]
