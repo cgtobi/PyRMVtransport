@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 defusedxml = "*"
 aiohttp = "*"
+lxml = "*"
 
 [dev-packages]
 pytest-asyncio = "*"
