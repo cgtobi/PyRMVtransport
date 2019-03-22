@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyRMVtransport",
-    version="0.2.3",
+    version="0.2.4",
     author="cgtobi",
     author_email="cgtobi@gmail.com",
     python_requires=">=3.6.0",
@@ -14,7 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/cgtobi/PyRMVtransport",
     packages=setuptools.find_packages(exclude=("tests",)),
-    install_requires=["defusedxml", "aiohttp"],
+    install_requires=["lxml", "aiohttp"],
     license="MIT",
     classifiers=(
         "Programming Language :: Python",
