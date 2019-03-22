@@ -4,13 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-lxml = "*"
 aiohttp = "*"
+lxml = "*"
+
+[dev-packages]
 pytest-asyncio = "*"
 aresponses = "*"
 pylint = "*"
-
-[dev-packages]
 tox = "*"
 twine = "*"
 detox = "*"
@@ -23,6 +23,8 @@ coverage = "*"
 mock = "*"
 "flake8" = "*"
 mypy = "*"
+bandit = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.6"
