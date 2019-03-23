@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyRMVtransport",
-    version="0.2.4",
+    version="0.2.5",
     author="cgtobi",
     author_email="cgtobi@gmail.com",
-    python_requires=">=3.6.0",
+    python_requires=">=3.5.3",
     description="Get transport information from opendata.rmv.de",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -19,7 +19,7 @@ setuptools.setup(
     classifiers=(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.5.3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
