@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.2.4",
     author="cgtobi",
     author_email="cgtobi@gmail.com",
-    python_requires=">=3.5.3",
+    python_requires=">=3.6",
     description="Get transport information from opendata.rmv.de",
     long_description=long_description,
     long_description_content_type="text/markdown",
