@@ -76,7 +76,7 @@ class RMVtransport:
         try:
             with async_timeout.timeout(self._timeout):
                 async with self._session.get(url) as response:
-                    _LOGGER.debug("Response from RMV API: %s", response.status)
+                    _LOGGER.debug(f"Response from RMV API: {response.status}")
                     xml = await response.read()
                     _LOGGER.debug(xml)
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -87,7 +87,8 @@ class RMVtransport:
         try:
             self.obj = objectify.fromstring(xml)
         except (TypeError, etree.XMLSyntaxError):
-            _LOGGER.debug("Get from string: %s", xml[:100])
+            _LOGGER.debug(f"Get from string: {xml[:100]}")
+            print(f"Get from string: {xml}")
             raise RMVtransportError()
 
         try:
@@ -95,7 +96,7 @@ class RMVtransport:
             self.station = self._station()
         except (TypeError, AttributeError):
             _LOGGER.debug(
-                "Time/Station TypeError or AttributeError %s", objectify.dump(self.obj)
+                f"Time/Station TypeError or AttributeError {objectify.dump(self.obj)}"
             )
             raise RMVtransportError()
 
@@ -104,7 +105,7 @@ class RMVtransport:
             for journey in self.obj.SBRes.JourneyList.Journey:
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
-            _LOGGER.debug("Extract journeys: %s", objectify.dump(self.obj.SBRes))
+            _LOGGER.debug(f"Extract journeys: {objectify.dump(self.obj.SBRes)}")
             raise RMVtransportError()
 
         return self.data()
@@ -157,15 +158,15 @@ class RMVtransport:
             : self.max_journeys
         ]:
             print("-------------")
-            print("%s: %s (%s)" % (j.product, j.number, j.train_id))
-            print("Richtung: %s" % (j.direction))
-            print("Abfahrt in %i min." % (j.real_departure))
-            print("Abfahrt %s (+%i)" % (j.departure.time(), j.delay))
-            print("Nächste Haltestellen: %s" % ([s["station"] for s in j.stops]))
+            print(f"{j.product}: {j.number} ({j.train_id})")
+            print(f"Richtung: {j.direction}")
+            print(f"Abfahrt in {j.real_departure} min.")
+            print(f"Abfahrt {j.departure.time()} (+{j.delay})")
+            print(f"Nächste Haltestellen: {([s['station'] for s in j.stops])}")
             if j.info:
-                print("Hinweis: %s" % (j.info))
-                print("Hinweis (lang): %s" % (j.info_long))
-            print("Icon: %s" % j.icon)
+                print(f"Hinweis: {j.info}")
+                print(f"Hinweis (lang): {j.info_long}")
+            print(f"Icon: {j.icon}")
 
 
 def _product_filter(products) -> str:
