@@ -6,14 +6,19 @@ matrix:
     - python: "3.6"
       env: TOXENV=cov
       after_success: codecov
+      dist: xenial
     - python: "3.6"
       env: TOXENV=lint
+      dist: xenial
     - python: "3.6"
       env: TOXENV=typing
+      dist: xenial
     - python: "3.6"
       env: TOXENV=py36
+      dist: xenial
     - python: "3.7"
       env: TOXENV=py37
+      dist: xenial
 
 language: python
 install: pip install -U codecov tox
