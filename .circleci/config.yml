@@ -82,8 +82,7 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt"
-          }}
+        - v1-dependencies--{{ checksum "Pipfile.lock" }}
     - run:
         command: |
           sudo pip install pipenv
@@ -92,8 +91,7 @@ jobs:
     - save_cache:
         paths:
         - ./venv
-        key: v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt"
-          }}
+        key: v1-dependencies--{{ checksum "Pipfile.lock" }}
 
 workflows:
   version: 2
