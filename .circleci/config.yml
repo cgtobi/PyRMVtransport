@@ -141,19 +141,17 @@ workflows:
   test:
     jobs:
       - build
+      - lint:
           requires:
             - build
-      - lint
-          requires:
-            - build
-      - cov
+      - cov:
           requires:
             - build
       - py36
-      - py37
+      - py37:
           requires:
             - build
-      - typing
+      - typing:
           requires:
             - build
 
