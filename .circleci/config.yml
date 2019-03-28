@@ -69,12 +69,6 @@ jobs:
       - image: circleci/python:3.7
         environment:
           TOXENV=cov
-  lint:
-    <<: *common
-    docker:
-      - image: circleci/python:3.7
-        environment:
-          TOXENV=lint
   typing:
     <<: *common
     docker:
