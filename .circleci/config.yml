@@ -39,4 +39,4 @@ jobs:
           key: v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
 
       - run:
-        command: pipenv run tox
+          command: pipenv run tox
