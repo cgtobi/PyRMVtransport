@@ -76,6 +76,15 @@ jobs:
         environment:
           TOXENV=typing
 
+workflows:
+  version: 2
+  test:
+    jobs:
+      - lint
+      - cov
+      - py36
+      - py37
+      - typing
 
 # jobs:
 #   build:
