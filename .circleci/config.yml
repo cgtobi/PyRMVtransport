@@ -75,8 +75,6 @@ common: &common
 #py36, py37, py38, cov, lint, typing
 jobs:
   lint:
-    requires:
-      - build
     <<: *common
     docker:
       - image: circleci/python:3.7.2
@@ -90,24 +88,18 @@ jobs:
         environment:
           TOXENV=py36
   py37:
-    requires:
-      - build
     <<: *common
     docker:
       - image: circleci/python:3.7.2
         environment:
           TOXENV=py37
   cov:
-    requires:
-      - build
     <<: *common
     docker:
       - image: circleci/python:3.7.2
         environment:
           TOXENV=cov
   typing:
-    requires:
-      - build
     <<: *common
     docker:
       - image: circleci/python:3.7.2
@@ -149,11 +141,21 @@ workflows:
   test:
     jobs:
       - build
+          requires:
+            - build
       - lint
+          requires:
+            - build
       - cov
+          requires:
+            - build
       - py36
       - py37
+          requires:
+            - build
       - typing
+          requires:
+            - build
 
 # jobs:
 #   build:
