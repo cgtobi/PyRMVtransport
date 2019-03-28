@@ -8,11 +8,11 @@ common: &common
   working_directory: ~/repo
   steps:
     - checkout
-    - run: sudo chown -R circleci:circleci /usr/local/bin
-    - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
     - restore_cache:
-        key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+        keys:
+          - v2-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "setup.py" }}-{{ checksum "tox.ini" }}
     - run:
+        name: install dependencies
         command: |
           sudo pip install pipenv
           pipenv install --dev
@@ -23,8 +23,7 @@ common: &common
           - "/usr/local/bin"
           - "/usr/local/lib/python3.7/site-packages"
     - run:
-      command: |
-        pipenv run tox
+      command: pipenv run tox
     - run:
         name: upload coverage report
         command: |
