@@ -81,12 +81,12 @@ jobs:
         environment:
           - TOXENV=lint
           - UPLOAD_COVERAGE=0
-  py36:
-    <<: *common
-    docker:
-      - image: circleci/python:3.6
-        environment:
-          TOXENV=py36
+  # py36:
+  #   <<: *common
+  #   docker:
+  #     - image: circleci/python:3.6
+  #       environment:
+  #         TOXENV=py36
   py37:
     <<: *common
     docker:
@@ -107,14 +107,7 @@ jobs:
           TOXENV=typing
   build:
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
       - image: circleci/python:3.7.2
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
       - image: circleci/buildpack-deps:stretch
 
     working_directory: ~/repo
@@ -147,7 +140,7 @@ workflows:
       - cov:
           requires:
             - build
-      - py36
+      # - py36
       - py37:
           requires:
             - build
