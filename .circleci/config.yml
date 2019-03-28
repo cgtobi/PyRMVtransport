@@ -1,81 +1,51 @@
 version: 2.1
 
 
-# jobs:
-#   build:
-#     docker:
-#       - image: circleci/python:3.7.2
-#       - image: circleci/buildpack-deps:stretch
-#
-#     working_directory: ~/repo
-#
-#     steps:
-#       - checkout
-#
-#       - restore_cache:
-#           keys:
-#             - v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
-#
-#       - run:
-#           command: |
-#             sudo pip install pipenv
-#             pipenv --python 3.7
-#             pipenv install --dev
-#
-#       - save_cache:
-#           paths:
-#             - ./venv
-#           key: v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
-#
-#       - run:
-#           command: pipenv run tox
 
 
-
-
-common: &common
-  working_directory: ~/repo
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - v2-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "setup.py" }}-{{ checksum "tox.ini" }}
-    - run:
-        name: install dependencies
-        command: |
-          sudo pip install pipenv
-          pipenv --python 3.7
-          pipenv install --dev
-    - save_cache:
-        key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
-        paths:
-          - ".venv"
-          - "/usr/local/bin"
-          - "/usr/local/lib/python3.7/site-packages"
-    - run:
-        name: run tox
-        command: pipenv run tox
-    - run:
-        name: upload coverage report
-        command: |
-           if [[ "$UPLOAD_COVERAGE" != 0 ]]; then
-               PATH=$HOME/.local/bin:$PATH
-               pip install --user codecov
-               coverage xml
-               ~/.local/bin/codecov --required -X search gcov pycov -f coverage.xml --flags $CIRCLE_JOB
-           fi
-    - save_cache:
-        paths:
-          - .tox
-          - ~/.cache/pip
-          - ~/.local
-          - ./eggs
-        key: v2-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "setup.py" }}-{{ checksum "tox.ini" }}
+# common: &common
+#   working_directory: ~/repo
+#   steps:
+#     - checkout
+#     - restore_cache:
+#         keys:
+#           - v2-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "setup.py" }}-{{ checksum "tox.ini" }}
+#     - run:
+#         name: install dependencies
+#         command: |
+#           sudo pip install pipenv
+#           pipenv --python 3.7
+#           pipenv install --dev
+#     - save_cache:
+#         key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+#         paths:
+#           - ".venv"
+#           - "/usr/local/bin"
+#           - "/usr/local/lib/python3.7/site-packages"
+#     - run:
+#         name: run tox
+#         command: pipenv run tox
+#     - run:
+#         name: upload coverage report
+#         command: |
+#            if [[ "$UPLOAD_COVERAGE" != 0 ]]; then
+#                PATH=$HOME/.local/bin:$PATH
+#                pip install --user codecov
+#                coverage xml
+#                ~/.local/bin/codecov --required -X search gcov pycov -f coverage.xml --flags $CIRCLE_JOB
+#            fi
+#     - save_cache:
+#         paths:
+#           - .tox
+#           - ~/.cache/pip
+#           - ~/.local
+#           - ./eggs
+#         key: v2-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "setup.py" }}-{{ checksum "tox.ini" }}
 
 #py36, py37, py38, cov, lint, typing
 jobs:
   lint:
-    <<: *common
+    # <<: *common
     docker:
       - image: circleci/python:3.7.2
         environment:
@@ -88,19 +58,19 @@ jobs:
   #       environment:
   #         TOXENV=py36
   py37:
-    <<: *common
+    # <<: *common
     docker:
       - image: circleci/python:3.7.2
         environment:
           TOXENV=py37
   cov:
-    <<: *common
+    # <<: *common
     docker:
       - image: circleci/python:3.7.2
         environment:
           TOXENV=cov
   typing:
-    <<: *common
+    # <<: *common
     docker:
       - image: circleci/python:3.7.2
         environment:
@@ -121,6 +91,7 @@ jobs:
       - run:
           command: |
             sudo pip install pipenv
+            pipenv --python 3.7
             pipenv install
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
