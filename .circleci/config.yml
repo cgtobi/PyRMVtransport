@@ -82,6 +82,9 @@ jobs:
       name: python
       tag: "3.7"
     steps:
+      - checkout_code
+      - install-requirments:
+          pyver: "3.7"
       - run-cmd:
           cmd: lint
 
