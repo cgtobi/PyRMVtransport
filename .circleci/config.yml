@@ -8,6 +8,7 @@ executors:
         default: latest
     docker:
       - image: circleci/python:<< parameters.tag >>
+      - image: circleci/buildpack-deps:stretch
     working_directory: ~/repo
 
 commands:
@@ -24,19 +25,19 @@ commands:
       - restore_cache:
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Create venv
+          name: Create << parameters.pyver >> venv
           command: |
-            pip install --user flit
-            python<< parameters.pyver >> -m venv ~/venv
+            python3 -m venv venv
+            pip install flit
       - run:
           name: Install dependencies
           command: |
-            . ~/venv/bin/activate
+            . venv/bin/activate
             flit install
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
           paths:
-            - "~/venv"
+            - "./venv"
             # - "/usr/local/bin"
             # - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
@@ -54,7 +55,7 @@ commands:
       - run:
           name: Run command
           command: |
-            . ~/venv/bin/activate
+            . venv/bin/activate
             make << parameters.cmd >>
 
   checkout_code:
