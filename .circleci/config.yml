@@ -93,9 +93,22 @@ jobs:
       name: python
       tag: "3.7"
     steps:
-      - run:
-          name: run test suite
-          command: pipenv run make test
+      - checkout_code
+      - install-requirments:
+          pyver: "3.7"
+      - run-cmd:
+          cmd: test
+
+  typing:
+    executor:
+      name: python
+      tag: "3.7"
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: "3.7"
+      - run-cmd:
+          cmd: typing
 
 workflows:
   version: 2
@@ -103,5 +116,11 @@ workflows:
     jobs:
       - build
       - lint:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+      - typing:
           requires:
             - build
