@@ -39,11 +39,11 @@ jobs:
   lint:
     executor:
       name: python
-      tag: "3.6.4"
+      tag: "3.6"
     steps:
       - checkout
       - install-requirments:
-          pyver: "3.6.4"
+          pyver: "3.6"
       - run:
           name: run linter
           command: pipenv run make lint
