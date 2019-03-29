@@ -26,7 +26,7 @@ commands:
       - run:
           name: Create venv
           command: |
-            sudo pip install flit
+            pip install --user flit
             python<< parameters.pyver >> -m venv ~/venv
       - run:
           name: Install dependencies
