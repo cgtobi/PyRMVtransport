@@ -1,33 +1,50 @@
 version: 2.1
 
-jobs:
-  build:
-    working_directory: ~/repo
+executors:
+  python:
+    parameters:
+      tag:
+        type: string
+        default: latest
     docker:
-      - image: circleci/python:3.6.4
-        environment:
-          PIPENV_VENV_IN_PROJECT: true
+      - image: circleci/python:<< parameters.tag >>
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/repo
+
+commands:
+  install-requirments:
+    description: Set up venv and install requirements python packages with cache support
+    parameters:
+      pyver:
+        type: string
+        default: 3.7
     steps:
-      - checkout
       - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
       - restore_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
+          name: Install dependencies
           command: |
             sudo pip install pipenv
-            pipenv install --dev
+            pipenv install --dev --bare
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python3.6/site-packages"
+
+jobs:
+
+  lint:
+    executor:
+      name: python
+      tag: "3.6.4"
+    steps:
+      - checkout
+      - install-requirments:
+          pyver: 3.6.4
       - run:
-          command: |
-            pipenv run "make test"
-      - store_test_results:
-          path: test-results
-      - store_artifacts:
-          path: test-results
-          destination: tr1
+          name: run linter
+          command: pipenv run make lint
