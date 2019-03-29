@@ -2,14 +2,14 @@
 coverage:
 	py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
 build:
-	python3 setup.py sdist bdist_wheel
+	flit build
 clean:
 	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
 publish: build
-	twine upload dist/*
+	flit --repository pypi publish
 	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
 beta: build
-	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+	flit --repository testpypi publish
 	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
 test:
 	py.test tests
