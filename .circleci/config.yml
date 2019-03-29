@@ -69,55 +69,75 @@ commands:
 
 jobs:
   build:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
       - checkout_code
       - install-requirments:
-          pyver: "3.7"
+          pyver: << parameters.python >>
 
   lint:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
       - checkout_code
       - install-requirments:
-          pyver: "3.7"
+          pyver: << parameters.python >>
       - run-cmd:
           cmd: lint
 
   test:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
       - checkout_code
       - install-requirments:
-          pyver: "3.7"
+          pyver: << parameters.python >>
       - run-cmd:
           cmd: test
 
   typing:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
       - checkout_code
       - install-requirments:
-          pyver: "3.7"
+          pyver: << parameters.python >>
       - run-cmd:
           cmd: typing
 
   coverage:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
       - checkout_code
       - install-requirments:
-          pyver: "3.7"
+          pyver: << parameters.python >>
       - run-cmd:
           cmd: coverage
       - store_test_results:
@@ -135,11 +155,22 @@ workflows:
     jobs:
       - build
       - lint:
+          name: lint
           requires:
             - build
       - test:
+          name: test 3.7
+          python: "3.7"
+          requires:
+            - build
+      - test:
+          name: test 3.6
+          python: "3.6"
           requires:
             - build
       - typing:
+          requires:
+            - build
+      - coverage:
           requires:
             - build
