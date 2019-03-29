@@ -63,7 +63,7 @@ jobs:
       - run:
           name: run linter
           command: |
-            . ~/venv_<< parameters.tag >>/bin/activate
+            . ~/venv_37/bin/activate
             flake8 RMVtransport
 
   test:
