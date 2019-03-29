@@ -16,26 +16,46 @@ commands:
     parameters:
       pyver:
         type: string
-        default: "3.7"
     steps:
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
       - restore_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
       - restore_cache:
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
+          name: Create venv
+          command: |
+            sudo pip install flit
+            python<< parameters.pyver >> -m venv ~/venv
+      - run:
           name: Install dependencies
           command: |
-            sudo pip install pipenv
-            pipenv install --dev
+            . ~/venv/bin/activate
+            flit install
       - save_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
           paths:
-            - "~/repo"
-            - "/.local/share/virtualenv"
+            - "~/venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
+
+  run-cmd:
+    description: Restore cached environment and run tests
+    parameters:
+      cmd:
+        type: string
+        default: test
+    steps:
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}
+      - restore_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Run command
+          command: |
+            . ~/venv/bin/activate
+            make << parameters.cmd >>
 
   checkout_code:
     steps:
@@ -47,31 +67,77 @@ commands:
 
 jobs:
   build:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
       - checkout_code
       - install-requirments:
-          pyver: "3.7"
+          pyver: << parameters.python >>
 
   lint:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
-      - run:
-          name: run linter
-          command: pipenv run make lint
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: lint
 
   test:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
     executor:
       name: python
-      tag: "3.7"
+      tag: << parameters.python >>
     steps:
-      - run:
-          name: run test suite
-          command: pipenv run make test
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: test
+
+  typing:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: typing
+
+  coverage:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: coverage
 
 workflows:
   version: 2
@@ -79,5 +145,22 @@ workflows:
     jobs:
       - build
       - lint:
+          name: lint
+          requires:
+            - build
+      - test:
+          name: test 3.7
+          python: "3.7"
+          requires:
+            - build
+      # - test:
+      #     name: test 3.6
+      #     python: "3.6"
+      #     requires:
+      #       - build
+      - typing:
+          requires:
+            - build
+      - coverage:
           requires:
             - build

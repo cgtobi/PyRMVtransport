@@ -1,0 +1,38 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "RMVtransport"
+author = "cgtobi"
+author-email = "cgtobi@gmail.com"
+home-page = "http://github.com/cgtobi/RMVtransport"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "requests >= 2.21.0",
+    "lxml",
+    "aiohttp"
+]
+requires-python=">=3.6,<4"
+description-file="README.md"
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest >= 4.3.0",
+    "pytest-cov >= 2.6.1",
+    "pytest-asyncio",
+    "aresponses",
+    "pylint",
+    "tox",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-aiohttp",
+    "asynctest",
+    "codecov",
+    "coverage",
+    "mock",
+    "flake8",
+    "mypy",
+    "bandit",
+    "pre-commit"
+]
