@@ -38,7 +38,6 @@ commands:
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
   checkout_code:
-    working_directory: ~/repo
     steps:
       - checkout
       - save_cache:
