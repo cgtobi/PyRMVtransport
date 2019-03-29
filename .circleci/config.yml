@@ -17,7 +17,7 @@ commands:
     parameters:
       pyver:
         type: string
-        default: 3.7
+        default: "3.7"
     steps:
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
@@ -44,7 +44,7 @@ jobs:
     steps:
       - checkout
       - install-requirments:
-          pyver: 3.6.4
+          pyver: "3.6.4"
       - run:
           name: run linter
           command: pipenv run make lint
