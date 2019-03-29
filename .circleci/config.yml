@@ -25,11 +25,14 @@ commands:
       - restore_cache:
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Install dependencies
+          name: Create venv
           command: |
             sudo pip install flit
             python<< parameters.pyver >> -m venv ~/venv_<< parameters.pyver >>
-            . ~/venv_37/bin/activate
+      - run:
+          name: Install dependencies
+          command: |
+            . ~/venv_<< parameters.pyver >>/bin/activate
             flit install
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
