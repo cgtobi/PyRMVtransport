@@ -20,7 +20,7 @@ commands:
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
       - restore_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-{{ python --version }}
       - restore_cache:
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
@@ -34,9 +34,8 @@ commands:
             . ~/venv/bin/activate
             flit install
       - save_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-{{ python --version }}
           paths:
-            - "~/repo"
             - "~/venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
