@@ -32,7 +32,7 @@ commands:
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
-            - "{{ pipenv --venv }}"
+            - "/.local/share/virtualenv"
 
 jobs:
   lint:
