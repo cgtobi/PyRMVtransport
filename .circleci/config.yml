@@ -27,13 +27,13 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            sudo pip install pipenv
-            pipenv install --dev
+            sudo pip install flit
+            python<< parameters.pyver >> -m venv ~/venv_<< parameters.pyver >>
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
             - "~/repo"
-            - "/.local/share/virtualenv"
+            - "~/venv_<< parameters.pyver >>"
             - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
@@ -62,7 +62,9 @@ jobs:
     steps:
       - run:
           name: run linter
-          command: pipenv run make lint
+          command: |
+            . ~/venv_<< parameters.tag >>/bin/activate
+            flake8 RMVtransport
 
   test:
     executor:
