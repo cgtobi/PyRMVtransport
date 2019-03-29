@@ -153,11 +153,11 @@ workflows:
           python: "3.7"
           requires:
             - build
-      - test:
-          name: test 3.6
-          python: "3.6"
-          requires:
-            - build
+      # - test:
+      #     name: test 3.6
+      #     python: "3.6"
+      #     requires:
+      #       - build
       - typing:
           requires:
             - build
