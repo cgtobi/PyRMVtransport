@@ -154,12 +154,12 @@ workflows:
       - lint:
           name: lint
           requires:
-            - build
+            - build 3.7
       - test:
           name: test 3.7
           python: "3.7"
           requires:
-            - build
+            - build 3.7
       # - test:
       #     name: test 3.6
       #     python: "3.6"
@@ -167,7 +167,7 @@ workflows:
       #       - build
       - typing:
           requires:
-            - build
+            - build 3.7
       - coverage:
           requires:
-            - build
+            - build 3.7
