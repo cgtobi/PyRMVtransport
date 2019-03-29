@@ -33,17 +33,17 @@ commands:
           paths:
             - ".venv"
             - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
+            - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
 jobs:
   lint:
     executor:
       name: python
-      tag: "3.6"
+      tag: "3.7"
     steps:
       - checkout
       - install-requirments:
-          pyver: "3.6"
+          pyver: "3.7"
       - run:
           name: run linter
           command: pipenv run make lint
