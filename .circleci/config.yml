@@ -28,17 +28,17 @@ commands:
           name: Create venv
           command: |
             sudo pip install flit
-            python<< parameters.pyver >> -m venv ~/venv_<< parameters.pyver >>
+            python<< parameters.pyver >> -m venv ~/venv
       - run:
           name: Install dependencies
           command: |
-            . ~/venv_<< parameters.pyver >>/bin/activate
+            . ~/venv/bin/activate
             flit install
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
             - "~/repo"
-            - "~/venv_<< parameters.pyver >>"
+            - "~/venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
@@ -56,7 +56,7 @@ commands:
       - run:
           name: Run command
           command: |
-            . ~/venv_<< parameters.pyver >>/bin/activate
+            . ~/venv/bin/activate
             make << parameters.cmd >>
 
   checkout_code:
