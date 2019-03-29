@@ -17,8 +17,8 @@ commands:
       pyver:
         type: string
     steps:
-      # - run: sudo chown -R circleci:circleci /usr/local/bin
-      # - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
       - restore_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-<< parameters.pyver >>
       - restore_cache:
@@ -38,7 +38,7 @@ commands:
           paths:
             - "~/venv"
             - "/usr/local/bin"
-            # - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
+            - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
   run-cmd:
     description: Restore cached environment and run tests
