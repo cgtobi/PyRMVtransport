@@ -32,9 +32,7 @@ commands:
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
+            - "{{ pipenv --venv }}"
 
 jobs:
   lint:
