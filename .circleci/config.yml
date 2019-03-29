@@ -1,0 +1,166 @@
+version: 2.1
+
+executors:
+  python:
+    parameters:
+      tag:
+        type: string
+        default: latest
+    docker:
+      - image: circleci/python:<< parameters.tag >>
+    working_directory: ~/repo
+
+commands:
+  install-requirments:
+    description: Set up venv and install requirements python packages with cache support
+    parameters:
+      pyver:
+        type: string
+    steps:
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
+      - restore_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Create venv
+          command: |
+            sudo pip install flit
+            python<< parameters.pyver >> -m venv ~/venv
+      - run:
+          name: Install dependencies
+          command: |
+            . ~/venv/bin/activate
+            flit install
+      - save_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
+          paths:
+            - "~/venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
+
+  run-cmd:
+    description: Restore cached environment and run tests
+    parameters:
+      cmd:
+        type: string
+        default: test
+    steps:
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}
+      - restore_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Run command
+          command: |
+            . ~/venv/bin/activate
+            make << parameters.cmd >>
+
+  checkout_code:
+    steps:
+      - checkout
+      - save_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/repo
+
+jobs:
+  build:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+
+  lint:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: lint
+
+  test:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: test
+
+  typing:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: typing
+
+  coverage:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run-cmd:
+          cmd: coverage
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - lint:
+          name: lint
+          requires:
+            - build
+      - test:
+          name: test 3.7
+          python: "3.7"
+          requires:
+            - build
+      # - test:
+      #     name: test 3.6
+      #     python: "3.6"
+      #     requires:
+      #       - build
+      - typing:
+          requires:
+            - build
+      - coverage:
+          requires:
+            - build
