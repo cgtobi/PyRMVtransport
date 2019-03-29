@@ -20,10 +20,10 @@ commands:
     steps:
       - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
-      # - restore_cache:
-      #     key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - restore_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - restore_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Install dependencies
           command: |
@@ -32,9 +32,19 @@ commands:
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
+            - "~/repo"
             - "/.local/share/virtualenv"
             - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
+
+  checkout_code:
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - save_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/repo
 
 jobs:
   build:
@@ -42,19 +52,17 @@ jobs:
       name: python
       tag: "3.7"
     steps:
-      - checkout
+      - checkout_code
       - install-requirments:
           pyver: "3.7"
-      - run:
-          name: run test suite
-          command: pipenv run make lint
+
   lint:
     executor:
       name: python
       tag: "3.7"
     steps:
       - run:
-          name: run test suite
+          name: run linter
           command: pipenv run make lint
 
   test:
@@ -63,7 +71,7 @@ jobs:
       tag: "3.7"
     steps:
       - run:
-          name: run linter
+          name: run test suite
           command: pipenv run make test
 
 workflows:
