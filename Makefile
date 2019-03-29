@@ -4,13 +4,11 @@ coverage:
 build:
 	flit build
 clean:
-	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
-publish: build
+	rm -rf dist/
+publish:
 	flit --repository pypi publish
-	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
-beta: build
+beta:
 	flit --repository testpypi publish
-	rm -rf dist/ build/ .egg PyRMVtransport.egg-info/
 test:
 	py.test tests
 lint:
