@@ -138,6 +138,11 @@ jobs:
           pyver: << parameters.python >>
       - run-cmd:
           cmd: coverage
+      - run:
+          name: Upload coverage file
+          command: |
+            coverage xml
+            codecov --required -X search gcov pycov -f coverage.xml --flags $CIRCLE_JOB
 
 workflows:
   version: 2
