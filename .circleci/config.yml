@@ -42,6 +42,23 @@ commands:
             - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
+  run-cmd:
+    description: Restore cached environment and run tests
+    parameters:
+      cmd:
+        type: string
+        default: test
+    steps:
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - restore_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Run command
+          command: |
+            . ~/venv_<< parameters.pyver >>/bin/activate
+            make << parameters.cmd >>
+
   checkout_code:
     steps:
       - checkout
@@ -60,17 +77,13 @@ jobs:
       - install-requirments:
           pyver: "3.7"
 
-
   lint:
     executor:
       name: python
       tag: "3.7"
     steps:
-      - run:
-          name: run linter
-          command: |
-            . ~/venv_37/bin/activate
-            flake8 RMVtransport
+      - run-cmd:
+          cmd: lint
 
   test:
     executor:
