@@ -23,14 +23,14 @@ commands:
       # - restore_cache:
       #     key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - restore_cache:
-          keys: v1-dependencies-<< parameters.pyver >>{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          keys: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: Install dependencies
           command: |
             sudo pip install pipenv
-            pipenv install --dev --bare
+            pipenv install --dev
       - save_cache:
-          key: v1-dependencies-<< parameters.pyver >>{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
