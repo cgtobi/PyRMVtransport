@@ -28,6 +28,7 @@ commands:
           name: Create << parameters.pyver >> venv
           command: |
             python3 -m venv venv
+            . venv/bin/activate
             pip install flit
       - run:
           name: Install dependencies
