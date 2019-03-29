@@ -29,6 +29,8 @@ commands:
           command: |
             sudo pip install flit
             python<< parameters.pyver >> -m venv ~/venv_<< parameters.pyver >>
+            . ~/venv_37/bin/activate
+            flit install
       - save_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
@@ -54,6 +56,7 @@ jobs:
       - checkout_code
       - install-requirments:
           pyver: "3.7"
+
 
   lint:
     executor:
