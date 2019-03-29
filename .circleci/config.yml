@@ -18,7 +18,7 @@ commands:
         type: string
         default: "3.7"
     steps:
-      # - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/bin
       - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
       # - restore_cache:
       #     key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
@@ -33,6 +33,7 @@ commands:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
             - "/.local/share/virtualenv"
+            - "/usr/local/bin"
             - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
 jobs:
