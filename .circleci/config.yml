@@ -41,23 +41,6 @@ commands:
             # - "/usr/local/bin"
             # - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
-  run-cmd:
-    description: Restore cached environment and run tests
-    parameters:
-      cmd:
-        type: string
-        default: test
-    steps:
-      - restore_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}
-      - restore_cache:
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Run command
-          command: |
-            . venv/bin/activate
-            make << parameters.cmd >>
-
   checkout_code:
     steps:
       - checkout
@@ -93,7 +76,7 @@ jobs:
       - install-requirments:
           pyver: << parameters.python >>
       - run:
-          name: Run mypy
+          name: Run linter
           command: |
             . venv/bin/activate
             flake8 RMVtransport
@@ -112,7 +95,7 @@ jobs:
       - install-requirments:
           pyver: << parameters.python >>
       - run:
-          name: Run mypy
+          name: Run pytest
           command: |
             . venv/bin/activate
             py.test tests
@@ -147,8 +130,11 @@ jobs:
       - checkout_code
       - install-requirments:
           pyver: << parameters.python >>
-      - run-cmd:
-          cmd: coverage
+      - run:
+          name: Run mypy
+          command: |
+            . venv/bin/activate
+            py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
       - run:
           name: Upload coverage file
           command: |
