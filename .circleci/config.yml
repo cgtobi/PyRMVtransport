@@ -17,45 +17,31 @@ commands:
       pyver:
         type: string
     steps:
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
+      # - run: sudo chown -R circleci:circleci /usr/local/bin
+      # - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
       - restore_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
+          name: Restoring environment
+          key: v1-deps-py<< parameters.pyver >>-{{ .Branch }}-{{ checksum "pyproject.toml" }}
       - restore_cache:
+          name: Restoring repository
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Create venv
+          name: Create << parameters.pyver >> venv
           command: |
-            sudo pip install flit
-            python<< parameters.pyver >> -m venv ~/venv
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install flit
       - run:
           name: Install dependencies
           command: |
-            . ~/venv/bin/activate
+            . venv/bin/activate
             flit install
       - save_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}-py<< parameters.pyver >>
+          key: v1-deps-py<< parameters.pyver >>-{{ .Branch }}-{{ checksum "pyproject.toml" }}
           paths:
-            - "~/venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
-
-  run-cmd:
-    description: Restore cached environment and run tests
-    parameters:
-      cmd:
-        type: string
-        default: test
-    steps:
-      - restore_cache:
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "pyproject.toml" }}
-      - restore_cache:
-          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Run command
-          command: |
-            . ~/venv/bin/activate
-            make << parameters.cmd >>
+            - "./venv"
+            # - "/usr/local/bin"
+            # - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
 
   checkout_code:
     steps:
@@ -66,7 +52,7 @@ commands:
             - ~/repo
 
 jobs:
-  build:
+  setup:
     parameters:
       python:
         type: string
@@ -91,8 +77,12 @@ jobs:
       - checkout_code
       - install-requirments:
           pyver: << parameters.python >>
-      - run-cmd:
-          cmd: lint
+      - run:
+          name: Run linter
+          command: |
+            . venv/bin/activate
+            flake8 RMVtransport
+            pylint --rcfile=.pylintrc RMVtransport
 
   test:
     parameters:
@@ -106,8 +96,11 @@ jobs:
       - checkout_code
       - install-requirments:
           pyver: << parameters.python >>
-      - run-cmd:
-          cmd: test
+      - run:
+          name: Run pytest
+          command: |
+            . venv/bin/activate
+            py.test tests
 
   typing:
     parameters:
@@ -121,8 +114,11 @@ jobs:
       - checkout_code
       - install-requirments:
           pyver: << parameters.python >>
-      - run-cmd:
-          cmd: typing
+      - run:
+          name: Run mypy
+          command: |
+            . venv/bin/activate
+            mypy RMVtransport
 
   coverage:
     parameters:
@@ -136,11 +132,15 @@ jobs:
       - checkout_code
       - install-requirments:
           pyver: << parameters.python >>
-      - run-cmd:
-          cmd: coverage
+      - run:
+          name: Run pytest
+          command: |
+            . venv/bin/activate
+            py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
       - run:
           name: Upload coverage file
           command: |
+            . venv/bin/activate
             coverage xml
             codecov --required -X search gcov pycov -f coverage.xml --flags $CIRCLE_JOB
 
@@ -148,24 +148,25 @@ workflows:
   version: 2
   build:
     jobs:
-      - build
+      - setup:
+          python: "3.7"
       - lint:
           name: lint
           requires:
-            - build
+            - setup
       - test:
           name: test 3.7
           python: "3.7"
           requires:
-            - build
-      # - test:
-      #     name: test 3.6
-      #     python: "3.6"
-      #     requires:
-      #       - build
+            - setup
+      - test:
+          name: test 3.6
+          python: "3.6"
+          requires:
+            - setup
       - typing:
           requires:
-            - build
+            - setup
       - coverage:
           requires:
-            - build
+            - setup
