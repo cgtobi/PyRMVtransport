@@ -133,7 +133,7 @@ jobs:
       - install-requirments:
           pyver: << parameters.python >>
       - run:
-          name: Run mypy
+          name: Run pytest
           command: |
             . venv/bin/activate
             py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
