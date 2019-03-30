@@ -50,7 +50,7 @@ commands:
             - ~/repo
 
 jobs:
-  build:
+  setup:
     parameters:
       python:
         type: string
@@ -138,6 +138,7 @@ jobs:
       - run:
           name: Upload coverage file
           command: |
+            . venv/bin/activate
             coverage xml
             codecov --required -X search gcov pycov -f coverage.xml --flags $CIRCLE_JOB
 
@@ -145,25 +146,25 @@ workflows:
   version: 2
   build:
     jobs:
-      - build:
+      - setup:
           python: "3.7"
       - lint:
           name: lint
           requires:
-            - build
+            - setup
       - test:
           name: test 3.7
           python: "3.7"
           requires:
-            - build
-      # - test:
-      #     name: test 3.6
-      #     python: "3.6"
-      #     requires:
-      #       - build
+            - setup
+      - test:
+          name: test 3.6
+          python: "3.6"
+          requires:
+            - setup
       - typing:
           requires:
-            - build
+            - setup
       - coverage:
           requires:
-            - build
+            - setup
