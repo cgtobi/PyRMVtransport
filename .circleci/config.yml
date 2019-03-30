@@ -97,7 +97,7 @@ jobs:
           command: |
             . venv/bin/activate
             flake8 RMVtransport
-          	pylint --rcfile=.pylintrc RMVtransport
+            pylint --rcfile=.pylintrc RMVtransport
 
   test:
     parameters:
