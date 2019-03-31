@@ -9,7 +9,6 @@ author-email = "cgtobi@gmail.com"
 home-page = "http://github.com/cgtobi/RMVtransport"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
-    "requests >= 2.21.0",
     "lxml",
     "aiohttp"
 ]
