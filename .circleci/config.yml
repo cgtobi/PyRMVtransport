@@ -1,0 +1,172 @@
+version: 2.1
+
+executors:
+  python:
+    parameters:
+      tag:
+        type: string
+        default: latest
+    docker:
+      - image: circleci/python:<< parameters.tag >>
+    working_directory: ~/repo
+
+commands:
+  install-requirments:
+    description: Set up venv and install requirements python packages with cache support
+    parameters:
+      pyver:
+        type: string
+    steps:
+      # - run: sudo chown -R circleci:circleci /usr/local/bin
+      # - run: sudo chown -R circleci:circleci /usr/local/lib/python<< parameters.pyver >>/site-packages
+      - restore_cache:
+          name: Restoring environment
+          key: v1-deps-py<< parameters.pyver >>-{{ .Branch }}-{{ checksum "pyproject.toml" }}
+      - restore_cache:
+          name: Restoring repository
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Create << parameters.pyver >> venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install flit
+      - run:
+          name: Install dependencies
+          command: |
+            . venv/bin/activate
+            flit install
+      - save_cache:
+          key: v1-deps-py<< parameters.pyver >>-{{ .Branch }}-{{ checksum "pyproject.toml" }}
+          paths:
+            - "./venv"
+            # - "/usr/local/bin"
+            # - "/usr/local/lib/python<< parameters.pyver >>/site-packages"
+
+  checkout_code:
+    steps:
+      - checkout
+      - save_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/repo
+
+jobs:
+  setup:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+
+  lint:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run:
+          name: Run linter
+          command: |
+            . venv/bin/activate
+            flake8 RMVtransport
+            pylint --rcfile=.pylintrc RMVtransport
+
+  test:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run:
+          name: Run pytest
+          command: |
+            . venv/bin/activate
+            py.test tests
+
+  typing:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run:
+          name: Run mypy
+          command: |
+            . venv/bin/activate
+            mypy RMVtransport
+
+  coverage:
+    parameters:
+      python:
+        type: string
+        default: "3.7"
+    executor:
+      name: python
+      tag: << parameters.python >>
+    steps:
+      - checkout_code
+      - install-requirments:
+          pyver: << parameters.python >>
+      - run:
+          name: Run pytest
+          command: |
+            . venv/bin/activate
+            py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
+      - run:
+          name: Upload coverage file
+          command: |
+            . venv/bin/activate
+            coverage xml
+            codecov --required -X search gcov pycov -f coverage.xml --flags $CIRCLE_JOB
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - setup:
+          python: "3.7"
+      - lint:
+          name: lint
+          requires:
+            - setup
+      - test:
+          name: test 3.7
+          python: "3.7"
+          requires:
+            - setup
+      - test:
+          name: test 3.6
+          python: "3.6"
+          requires:
+            - setup
+      - typing:
+          requires:
+            - setup
+      - coverage:
+          requires:
+            - setup
