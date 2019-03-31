@@ -4,9 +4,10 @@ build-backend = "flit.buildapi"
 
 [tool.flit.metadata]
 module = "RMVtransport"
+dist-name = "PyRMVtransport"
 author = "cgtobi"
 author-email = "cgtobi@gmail.com"
-home-page = "http://github.com/cgtobi/RMVtransport"
+home-page = "http://github.com/cgtobi/PyRMVtransport"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
     "lxml",
