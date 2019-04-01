@@ -13,6 +13,7 @@ from RMVtransport.rmvtransport import RMVtransportError
 
 URL = "www.rmv.de"
 URL_PATH = "/auskunft/bin/jp/stboard.exe/dn"
+URL_SEARCH_PATH = "/auskunft/bin/jp/ajax-getstop.exe/dn"
 
 
 def date_hook(json_dict):
@@ -44,8 +45,8 @@ async def test_getdepartures(event_loop, xml_request, capsys):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            data = await rmv.get_departures(stationId)
+            station_id = "3006904"
+            data = await rmv.get_departures(station_id)
             assert data == result_simple_json
 
             rmv.output()
@@ -64,10 +65,10 @@ async def test_departures_products(event_loop, xml_request):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
+            station_id = "3006904"
             products = ["S", "RB"]
             data = await rmv.get_departures(
-                stationId, products=products, max_journeys=50
+                station_id, products=products, max_journeys=50
             )
             assert data == result_products_filter_json
 
@@ -82,8 +83,8 @@ async def test_departures_error_xml(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            await rmv.get_departures(stationId)
+            station_id = "3006904"
+            await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
@@ -96,8 +97,8 @@ async def test_no_xml(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            await rmv.get_departures(stationId)
+            station_id = "3006904"
+            await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
@@ -110,8 +111,8 @@ async def test_departures_error_server(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            await rmv.get_departures(stationId)
+            station_id = "3006904"
+            await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
@@ -140,9 +141,9 @@ async def test_departures_bad_request(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            directionId = "3006905"
-            data = await rmv.get_departures(stationId, directionId)
+            station_id = "3006904"
+            direction_id = "3006905"
+            data = await rmv.get_departures(station_id, direction_id)
             assert data == result
 
 
@@ -159,8 +160,8 @@ async def test_no_journeys(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            await rmv.get_departures(stationId)
+            station_id = "3006904"
+            await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
@@ -176,8 +177,8 @@ async def test_no_timestamp(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            await rmv.get_departures(stationId)
+            station_id = "3006904"
+            await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
@@ -194,6 +195,25 @@ async def test_midnight(event_loop):
         async with aiohttp.ClientSession(loop=event_loop) as session:
             rmv = RMVtransport(session)
 
-            stationId = "3006904"
-            data = await rmv.get_departures(stationId)
+            station_id = "3006904"
+            data = await rmv.get_departures(station_id)
             assert data == result
+
+@pytest.fixture
+def stops_request():
+    with open("fixtures/stops.response") as f:
+        return f.read()
+
+
+@pytest.mark.asyncio
+async def test_search_station(event_loop, stops_request):
+    """Test station search."""
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_SEARCH_PATH, "get", stops_request)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            station = "Hauptwache"
+            data = await rmv.search_station(station)
+            assert data == {'Frankfurt (Main) Hauptwache': '003000001'}

@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional, Union
 import aiohttp
 import async_timeout
 from lxml import objectify, etree  # type: ignore
+import json
 
 from .errors import RMVtransportError, RMVtransportApiConnectionError
 from .rmvjourney import RMVJourney
@@ -88,7 +89,6 @@ class RMVtransport:
             self.obj = objectify.fromstring(xml)
         except (TypeError, etree.XMLSyntaxError):
             _LOGGER.debug(f"Get from string: {xml[:100]}")
-            print(f"Get from string: {xml}")
             raise RMVtransportError()
 
         try:
@@ -109,6 +109,39 @@ class RMVtransport:
             raise RMVtransportError()
 
         return self.data()
+
+    async def search_station(self, name: str, max: int = 25) -> Dict[str, str]:
+        """Search station/stop my name."""
+        base_url: str = _base_url(GETSTOP_PATH)
+
+        params: Dict[str, Union[str, int]] = {
+            "getstop": 1,
+            "REQ0JourneyStopsS0A": max,
+            "REQ0JourneyStopsS0G": name,
+        }
+
+        url = base_url + urllib.parse.urlencode(params)
+        _LOGGER.debug(f"URL: {url}")
+
+        try:
+            with async_timeout.timeout(self._timeout):
+                async with self._session.get(url) as response:
+                    _LOGGER.debug(f"Response from RMV API: {response.status}")
+                    data = await response.read()
+                    data = data.decode("utf-8")
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Can not load data from RMV API")
+            raise RMVtransportApiConnectionError()
+
+        try:
+            json_data = json.loads(data[data.find("{") : data.rfind("}") + 1])
+        except (TypeError, etree.XMLSyntaxError):
+            _LOGGER.debug(f"Error in JSON: {data[:100]}...")
+            raise RMVtransportError()
+
+        suggestions = json_data["suggestions"][:max]
+
+        return {item['value']:item['extId'] for item in suggestions}
 
     def data(self) -> Dict[str, Any]:
         """Return travel data."""
@@ -177,9 +210,9 @@ def _product_filter(products) -> str:
     return format(_filter, "b")[::-1]
 
 
-def _base_url() -> str:
+def _base_url(path: str = STBOARD_PATH) -> str:
     """Build base url."""
     _lang: str = "d"
     _type: str = "n"
     _with_suggestions: str = "?"
-    return BASE_URI + STBOARD_PATH + _lang + _type + _with_suggestions
+    return BASE_URI + path + _lang + _type + _with_suggestions
