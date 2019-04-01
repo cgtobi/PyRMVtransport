@@ -137,7 +137,7 @@ class RMVtransport:
             json_data = json.loads(
                 data[data.find("{") : data.rfind("}") + 1]  # noqa: E203
             )
-        except TypeError:
+        except (TypeError, json.JSONDecodeError):
             _LOGGER.debug(f"Error in JSON: {data[:100]}...")
             raise RMVtransportError()
 

@@ -218,3 +218,21 @@ async def test_search_station(event_loop, stops_request):
             station = "Hauptwache"
             data = await rmv.search_station(station)
             assert data == {"Frankfurt (Main) Hauptwache": "003000001"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test_search_station_fail(event_loop, stops_request):
+    """Test failing station search."""
+    with open("fixtures/request_no_timestamp.xml") as f:
+        xml = f.read()
+
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_SEARCH_PATH, "get", xml)
+
+        async with aiohttp.ClientSession(loop=event_loop) as session:
+            rmv = RMVtransport(session)
+
+            station = "Hauptwache"
+            data = await rmv.search_station(station)
+            assert data == {"Frankfurt (Main) Hauptwache": "003000001"}
