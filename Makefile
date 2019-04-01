@@ -1,4 +1,7 @@
 .PHONY: clean coverage beta test lint typing
+init:
+	pip install flit
+	flit install
 coverage:
 	py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
 build:
