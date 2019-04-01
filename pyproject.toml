@@ -13,7 +13,7 @@ requires = [
     "lxml",
     "aiohttp"
 ]
-requires-python=">=3.6,<4"
+requires-python=">=3.6"
 description-file="README.md"
 
 [tool.flit.metadata.requires-extra]
