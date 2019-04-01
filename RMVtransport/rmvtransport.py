@@ -74,15 +74,7 @@ class RMVtransport:
 
         url = base_url + urllib.parse.urlencode(params)
 
-        try:
-            with async_timeout.timeout(self._timeout):
-                async with self._session.get(url) as response:
-                    _LOGGER.debug(f"Response from RMV API: {response.status}")
-                    xml = await response.read()
-                    _LOGGER.debug(xml)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Can not load data from RMV API")
-            raise RMVtransportApiConnectionError()
+        xml = await self._query_rmv_api(url)
 
         # pylint: disable=I1101
         try:
@@ -123,15 +115,8 @@ class RMVtransport:
         url = base_url + urllib.parse.urlencode(params)
         _LOGGER.debug(f"URL: {url}")
 
-        try:
-            with async_timeout.timeout(self._timeout):
-                async with self._session.get(url) as response:
-                    _LOGGER.debug(f"Response from RMV API: {response.status}")
-                    res = await response.read()
-                    data = res.decode("utf-8")
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Can not load data from RMV API")
-            raise RMVtransportApiConnectionError()
+        res = await self._query_rmv_api(url)
+        data = res.decode("utf-8")
 
         try:
             json_data = json.loads(
@@ -144,6 +129,17 @@ class RMVtransport:
         suggestions = json_data["suggestions"][:max_results]
 
         return {item["value"]: item["extId"] for item in suggestions}
+
+    async def _query_rmv_api(self, url: str) -> bytes:
+        """Query RMV API."""
+        try:
+            with async_timeout.timeout(self._timeout):
+                async with self._session.get(url) as response:
+                    _LOGGER.debug(f"Response from RMV API: {response.status}")
+                    return await response.read()
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Can not load data from RMV API")
+            raise RMVtransportApiConnectionError()
 
     def data(self) -> Dict[str, Any]:
         """Return travel data."""
