@@ -199,6 +199,7 @@ async def test_midnight(event_loop):
             data = await rmv.get_departures(station_id)
             assert data == result
 
+
 @pytest.fixture
 def stops_request():
     with open("fixtures/stops.response") as f:
@@ -216,4 +217,4 @@ async def test_search_station(event_loop, stops_request):
 
             station = "Hauptwache"
             data = await rmv.search_station(station)
-            assert data == {'Frankfurt (Main) Hauptwache': '003000001'}
+            assert data == {"Frankfurt (Main) Hauptwache": "003000001"}
