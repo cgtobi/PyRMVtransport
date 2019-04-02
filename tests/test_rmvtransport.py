@@ -1,11 +1,11 @@
 """Define tests for the client object."""
 from datetime import datetime
 import json
+import asyncio
 import aiohttp
+import aresponses
 
 import pytest
-
-import aresponses
 
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import RMVtransportError
@@ -236,3 +236,23 @@ async def test_search_station_fail(event_loop, stops_request):
             station = "Hauptwache"
             data = await rmv.search_station(station)
             assert data == {"Frankfurt (Main) Hauptwache": "003000001"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=RMVtransportError)
+async def test__query_rmv_api_fail(event_loop, stops_request):
+    """Test failing station search."""
+
+    async def response_handler(request):
+        await asyncio.sleep(0.01)
+        return aresponses.Response(body="page loaded")
+
+    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+        arsps.add(URL, URL_SEARCH_PATH, "get", response_handler)
+
+        with pytest.raises(asyncio.TimeoutError):
+            async with aiohttp.ClientSession(loop=event_loop) as session:
+                rmv = RMVtransport(session, timeout=0.005)
+
+                url = f"https://{URL}{URL_SEARCH_PATH}"
+                await rmv._query_rmv_api(url)
