@@ -2,6 +2,7 @@
 init:
 	pip install flit
 	flit install
+	pre-commit install
 coverage:
 	py.test --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
 build:
@@ -19,3 +20,4 @@ lint:
 	pylint --rcfile=.pylintrc RMVtransport
 typing:
 	mypy RMVtransport
+all: test lint typing

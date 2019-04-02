@@ -1,0 +1,1 @@
+SLs.sls={"suggestions":[{"value":"Frankfurt (Main) Hauptwache","id":"A=1@O=Frankfurt (Main) Hauptwache@X=8679292@Y=50113963@U=80@L=003000001@B=1@V=6.9,@p=1553847178@","extId":"003000001","type":"1","typeStr":"[Bhf/Hst]","xcoord":"8679292","ycoord":"50113963","state":"id","prodClass":"24","weight":"20103"}]};SLs.showSuggestion();
