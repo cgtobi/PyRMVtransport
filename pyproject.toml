@@ -24,7 +24,6 @@ test = [
     "aresponses",
     "pylint",
     "tox",
-    "pytest-cov",
     "pytest-mock",
     "pytest-aiohttp",
     "asynctest",
@@ -34,5 +33,6 @@ test = [
     "flake8",
     "mypy",
     "bandit",
-    "pre-commit"
+    "pre-commit",
+    "black"
 ]
