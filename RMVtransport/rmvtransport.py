@@ -50,12 +50,12 @@ class RMVtransport:
         products: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Fetch data from rmv.de."""
-        self.station_id: str = station_id
-        self.direction_id: str = direction_id
+        self.station_id = station_id
+        self.direction_id = direction_id
 
-        self.max_journeys: int = max_journeys
+        self.max_journeys = max_journeys
 
-        self.products_filter: str = _product_filter(products or ALL_PRODUCTS)
+        self.products_filter = _product_filter(products or ALL_PRODUCTS)
 
         base_url: str = _base_url()
         params: Dict[str, Union[str, int]] = {
@@ -102,7 +102,7 @@ class RMVtransport:
 
         return self.data()
 
-    async def search_station(self, name: str, max_results: int = 25) -> Dict[str, str]:
+    async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
         """Search station/stop my name."""
         base_url: str = _base_url(GETSTOP_PATH)
 
@@ -128,7 +128,15 @@ class RMVtransport:
 
         suggestions = json_data["suggestions"][:max_results]
 
-        return {item["value"]: item["extId"] for item in suggestions}
+        return {
+            item["extId"]: {
+                "id": item["extId"],
+                "name": item["value"],
+                "lat": convert_coordinates(item["ycoord"]),
+                "long": convert_coordinates(item["xcoord"]),
+            }
+            for item in suggestions
+        }
 
     async def _query_rmv_api(self, url: str) -> bytes:
         """Query RMV API."""
@@ -214,3 +222,10 @@ def _base_url(path: str = STBOARD_PATH) -> str:
     _type: str = "n"
     _with_suggestions: str = "?"
     return BASE_URI + path + _lang + _type + _with_suggestions
+
+
+def convert_coordinates(value: str) -> float:
+    """Convert coordinates to lat/long."""
+    if len(value) < 8:
+        return float(value[0] + "." + value[1:])
+    return float(value[0:2] + "." + value[2:])
