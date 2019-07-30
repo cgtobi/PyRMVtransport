@@ -242,7 +242,14 @@ async def test_search_station_fail(event_loop, stops_request):
 
             station = "Hauptwache"
             data = await rmv.search_station(station)
-            assert data == {"Frankfurt (Main) Hauptwache": "003000001"}
+            assert data == {
+                "003000001": {
+                    "name": "Frankfurt (Main) Hauptwache",
+                    "id": "003000001",
+                    "lat": 50.113963,
+                    "long": 8.679292,
+                }
+            }
 
 
 @pytest.mark.asyncio
