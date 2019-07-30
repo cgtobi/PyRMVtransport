@@ -86,7 +86,7 @@ class RMVtransport:
         try:
             self.now = self.current_time()
             self.station = self._station()
-        except (TypeError, AttributeError):
+        except (TypeError, AttributeError, ValueError):
             _LOGGER.debug(
                 f"Time/Station TypeError or AttributeError {objectify.dump(self.obj)}"
             )
