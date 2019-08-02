@@ -102,10 +102,3 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
-demo.py
-search.py
-fixtures/3006907
-readme_demo.py
-report.xml
-venv_37/
