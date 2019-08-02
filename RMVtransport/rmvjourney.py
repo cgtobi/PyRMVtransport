@@ -69,7 +69,10 @@ class RMVJourney:
             self.attr_types.index(attribute)
         ].Attribute
         attr_variants = attr_data.xpath("AttributeVariant/@type")
-        data = attr_data.AttributeVariant[attr_variants.index("NORMAL")].Text.pyval
+        try:
+            data = attr_data.AttributeVariant[attr_variants.index("NORMAL")].Text.pyval
+        except ValueError:
+            return ""
         return str(data)
 
     def _info(self) -> Optional[str]:
