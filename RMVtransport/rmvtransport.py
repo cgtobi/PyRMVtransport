@@ -12,7 +12,7 @@ from lxml import objectify, etree  # type: ignore
 
 from .errors import RMVtransportError, RMVtransportApiConnectionError
 from .rmvjourney import RMVJourney
-from .const import PRODUCTS, ALL_PRODUCTS
+from .const import PRODUCTS, ALL_PRODUCTS, MAX_RETRIES, KNOWN_XML_ISSUES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,18 +77,39 @@ class RMVtransport:
         xml = await self._query_rmv_api(url)
 
         # pylint: disable=I1101
-        try:
-            self.obj = objectify.fromstring(xml)
-        except (TypeError, etree.XMLSyntaxError):
-            _LOGGER.debug(f"Get from string: {xml[:100]}")
-            raise RMVtransportError()
+        retry = 0
+        while retry < MAX_RETRIES:
+            try:
+                self.obj = objectify.fromstring(xml)
+                break
+            except (TypeError, etree.XMLSyntaxError) as e:
+                _LOGGER.debug(f"Exception: {e}")
+                xml_issue = xml.decode().split("\n")[e.lineno - 1]  # type: ignore
+                _LOGGER.debug(xml_issue)
+                _LOGGER.debug(f"Trying to fix the xml")
+                if xml_issue in KNOWN_XML_ISSUES.keys():
+                    xml = (
+                        xml.decode()
+                        .replace(
+                            xml.decode().split("\n")[e.lineno - 1],  # type: ignore
+                            KNOWN_XML_ISSUES[xml_issue],
+                        )
+                        .encode()
+                    )
+                    _LOGGER.debug(
+                        xml.decode().split("\n")[e.lineno - 1]  # type: ignore
+                    )
+                else:
+                    raise RMVtransportError()
+                retry -= 1
 
         try:
             self.now = self.current_time()
             self.station = self._station()
-        except (TypeError, AttributeError, ValueError):
+        except (TypeError, AttributeError, ValueError) as e:
             _LOGGER.debug(
-                f"Time/Station TypeError or AttributeError {objectify.dump(self.obj)}"
+                f"Time/Station TypeError or AttributeError {e} "
+                f"{objectify.dump(self.obj)[:100]}"
             )
             raise RMVtransportError()
 

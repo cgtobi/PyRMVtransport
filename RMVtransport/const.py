@@ -19,3 +19,7 @@ PRODUCTS: Dict[str, int] = {
 }
 
 ALL_PRODUCTS: List[str] = list(PRODUCTS.keys())
+
+MAX_RETRIES = 5
+
+KNOWN_XML_ISSUES = {"<Arr getIn=false>": "<Arr >"}
