@@ -82,22 +82,22 @@ class RMVtransport:
             try:
                 self.obj = objectify.fromstring(xml)
                 break
-            except (TypeError, etree.XMLSyntaxError) as e:
-                _LOGGER.debug(f"Exception: {e}")
-                xml_issue = xml.decode().split("\n")[e.lineno - 1]  # type: ignore
+            except (TypeError, etree.XMLSyntaxError) as err:
+                _LOGGER.debug(f"Exception: {err}")
+                xml_issue = xml.decode().split("\n")[err.lineno - 1]  # type: ignore
                 _LOGGER.debug(xml_issue)
                 _LOGGER.debug(f"Trying to fix the xml")
                 if xml_issue in KNOWN_XML_ISSUES.keys():
                     xml = (
                         xml.decode()
                         .replace(
-                            xml.decode().split("\n")[e.lineno - 1],  # type: ignore
+                            xml.decode().split("\n")[err.lineno - 1],  # type: ignore
                             KNOWN_XML_ISSUES[xml_issue],
                         )
                         .encode()
                     )
                     _LOGGER.debug(
-                        xml.decode().split("\n")[e.lineno - 1]  # type: ignore
+                        xml.decode().split("\n")[err.lineno - 1]  # type: ignore
                     )
                 else:
                     raise RMVtransportError()
@@ -106,9 +106,9 @@ class RMVtransport:
         try:
             self.now = self.current_time()
             self.station = self._station()
-        except (TypeError, AttributeError, ValueError) as e:
+        except (TypeError, AttributeError, ValueError) as err:
             _LOGGER.debug(
-                f"Time/Station TypeError or AttributeError {e} "
+                f"Time/Station TypeError or AttributeError {err} "
                 f"{objectify.dump(self.obj)[:100]}"
             )
             raise RMVtransportError()
