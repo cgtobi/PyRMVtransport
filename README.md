@@ -1,7 +1,7 @@
 # PyRMVtransport :bus:
 Python library to make use of transport information from opendata.rmv.de.
 
-[![GitHub Actions]](https://github.com/cgtobi/PyRMVtransport/workflows/Python%20package/badge.svg)
+[![GitHub Actions](https://github.com/cgtobi/PyRMVtransport/workflows/Python%20package/badge.svg)](https://github.com/cgtobi/PyRMVtransport/actions?workflow=Python+package)
 [![PyPi](https://img.shields.io/pypi/v/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
 [![PyPi](https://img.shields.io/pypi/pyversions/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
 [![PyPi](https://img.shields.io/pypi/l/PyRMVtransport.svg)](https://github.com/cgtobi/PyRMVtransport/blob/master/LICENSE)
