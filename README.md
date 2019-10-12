@@ -3,7 +3,7 @@ Python library to make use of transport information from opendata.rmv.de.
 
 [![GitHub Actions](https://github.com/cgtobi/PyRMVtransport/workflows/Python%20package/badge.svg)](https://github.com/cgtobi/PyRMVtransport/actions?workflow=Python+package)
 [![PyPi](https://img.shields.io/pypi/v/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
-[![PyPi](https://img.shields.io/pypi/pyversions/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
+<!-- [![PyPi](https://img.shields.io/pypi/pyversions/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport) -->
 [![PyPi](https://img.shields.io/pypi/l/PyRMVtransport.svg)](https://github.com/cgtobi/PyRMVtransport/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/cgtobi/PyRMVtransport/branch/master/graph/badge.svg)](https://codecov.io/gh/cgtobi/PyRMVtransport)
 [![Maintainability](https://api.codeclimate.com/v1/badges/9eeb0f9a9359b79205ad/maintainability)](https://codeclimate.com/github/cgtobi/PyRMVtransport/maintainability)
