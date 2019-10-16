@@ -47,3 +47,13 @@ jobs:
       run: |
         pip install pytest
         pytest
+    - name: Test coverage
+      run: |
+        pip install pytest
+        pytest --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
+    - uses: codecov/codecov-action@v1.0.2
+      with:
+        token: ${{secrets.CODECOV}}
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
