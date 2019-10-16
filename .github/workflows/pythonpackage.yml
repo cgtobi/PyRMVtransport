@@ -43,7 +43,13 @@ jobs:
       run: |
         pip install mypy
         mypy RMVtransport
-    - name: Test with pytest
+    - name: Test coverage
       run: |
-        pip install pytest
-        pytest
+        pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-aiohttp
+        pytest --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
+    - uses: codecov/codecov-action@v1.0.2
+      with:
+        token: ${{secrets.CODECOV}}
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
