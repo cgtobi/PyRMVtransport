@@ -18,8 +18,8 @@ description-file="README.md"
 
 [tool.flit.metadata.requires-extra]
 test = [
-    "pytest >= 4.3.0",
-    "pytest-cov >= 2.6.1",
+    "pytest >= 5.2.2",
+    "pytest-cov >= 2.8.1",
     "pytest-asyncio",
     "aresponses",
     "pylint",
