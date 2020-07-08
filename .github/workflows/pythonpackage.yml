@@ -47,9 +47,9 @@ jobs:
       run: |
         pip install pytest pytest-cov pytest-asyncio pytest-mock pytest-aiohttp
         pytest --verbose --cov-report term-missing --cov-report xml --cov=RMVtransport tests
-    - uses: codecov/codecov-action@v1.0.2
+    - uses: codecov/codecov-action@v1
       with:
-        token: ${{secrets.CODECOV}}
+        token: ${{ secrets.CODECOV }}
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
