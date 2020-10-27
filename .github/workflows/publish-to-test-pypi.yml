@@ -10,7 +10,7 @@ jobs:
     name: Build and publish 📦 to TestPyPI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@development
       - name: Set up Python 3.7
         uses: actions/setup-python@v2.1.4
         with:
