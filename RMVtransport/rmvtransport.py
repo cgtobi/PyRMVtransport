@@ -177,25 +177,24 @@ class RMVtransport:
         data["stationId"] = self.station_id
         data["filter"] = self.products_filter
 
-        journeys = []
-        for j in sorted(self.journeys, key=lambda k: k.real_departure)[
-            : self.max_journeys
-        ]:
-            journeys.append(
-                {
-                    "product": j.product,
-                    "number": j.number,
-                    "trainId": j.train_id,
-                    "direction": j.direction,
-                    "departure_time": j.real_departure_time,
-                    "minutes": j.real_departure,
-                    "delay": j.delay,
-                    "stops": [s["station"] for s in j.stops],
-                    "info": j.info,
-                    "info_long": j.info_long,
-                    "icon": j.icon,
-                }
-            )
+        journeys = [
+            {
+                "product": j.product,
+                "number": j.number,
+                "trainId": j.train_id,
+                "direction": j.direction,
+                "departure_time": j.real_departure_time,
+                "minutes": j.real_departure,
+                "delay": j.delay,
+                "stops": [s["station"] for s in j.stops],
+                "info": j.info,
+                "info_long": j.info_long,
+                "icon": j.icon,
+            }
+            for j in sorted(self.journeys, key=lambda k: k.real_departure)[
+                : self.max_journeys
+            ]
+        ]
         data["journeys"] = journeys
         return data
 
@@ -231,9 +230,7 @@ class RMVtransport:
 
 def _product_filter(products) -> str:
     """Calculate the product filter."""
-    _filter = 0
-    for product in {PRODUCTS[p] for p in products}:
-        _filter += product
+    _filter = sum({PRODUCTS[p] for p in products})
     return format(_filter, "b")[::-1]
 
 

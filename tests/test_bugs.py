@@ -28,14 +28,14 @@ def date_hook(json_dict):
 
 
 @pytest.mark.asyncio
-async def test_bug_3006907(event_loop, capsys):
+async def test_bug_3006907(capsys):
     """Test bug 3006907."""
     with open("fixtures/bug_3006907.xml") as f:
         xml_request = f.read()
-    async with aresponses.ResponsesMockServer(loop=event_loop) as arsps:
+    async with aresponses.ResponsesMockServer() as arsps:
         arsps.add(URL, URL_PATH, "get", xml_request)
 
-        async with aiohttp.ClientSession(loop=event_loop) as session:
+        async with aiohttp.ClientSession() as session:
             rmv = RMVtransport(session)
 
             station_id = "3006907"
