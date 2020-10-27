@@ -1,9 +1,9 @@
 name: Publish 📦 to TestPyPI
 
 on:
-  create:
+  push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-n-publish:
