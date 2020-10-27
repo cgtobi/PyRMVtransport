@@ -107,4 +107,7 @@ demo.py
 fixtures/3006907
 readme_demo.py
 report.xml
-venv_37/
+venv*/
+search.py
+xml_test.py
+launch.json
