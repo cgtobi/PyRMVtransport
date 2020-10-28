@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 import logging
 from typing import List, Dict, Any, Optional, Union
-import aiohttp
+import httpx
 import async_timeout
 from lxml import objectify, etree  # type: ignore
 
@@ -25,9 +25,8 @@ STBOARD_PATH: str = "stboard.exe/"
 class RMVtransport:
     """Connection data and travel information."""
 
-    def __init__(self, session: aiohttp.ClientSession, timeout: int = 10) -> None:
+    def __init__(self, timeout: int = 10) -> None:
         """Initialize connection data."""
-        self._session: aiohttp.ClientSession = session
         self._timeout: int = timeout
 
         self.now: datetime
@@ -75,6 +74,7 @@ class RMVtransport:
         url = base_url + urllib.parse.urlencode(params)
 
         xml = await self._query_rmv_api(url)
+        _LOGGER.debug("XML %s", xml)
 
         # pylint: disable=I1101
         retry = 0
@@ -86,7 +86,7 @@ class RMVtransport:
                 _LOGGER.debug(f"Exception: {err}")
                 xml_issue = xml.decode().split("\n")[err.lineno - 1]  # type: ignore
                 _LOGGER.debug(xml_issue)
-                _LOGGER.debug(f"Trying to fix the xml")
+                _LOGGER.debug("Trying to fix the xml")
                 if xml_issue in KNOWN_XML_ISSUES.keys():
                     xml = (
                         xml.decode()
@@ -159,14 +159,15 @@ class RMVtransport:
             for item in suggestions
         }
 
-    async def _query_rmv_api(self, url: str) -> bytes:
+    async def _query_rmv_api(self, url: str) -> Any:
         """Query RMV API."""
         try:
             with async_timeout.timeout(self._timeout):
-                async with self._session.get(url) as response:
-                    _LOGGER.debug(f"Response from RMV API: {response.status}")
-                    return await response.read()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(url)
+                    _LOGGER.debug(f"Response from RMV API: {response.status_code}")
+                    return response.read()
+        except (asyncio.TimeoutError):
             _LOGGER.error("Can not load data from RMV API")
             raise RMVtransportApiConnectionError()
 
