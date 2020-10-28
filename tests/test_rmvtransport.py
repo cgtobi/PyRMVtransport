@@ -1,9 +1,7 @@
 """Define tests for the client object."""
 from datetime import datetime
 import json
-import asyncio
-import aiohttp
-import aresponses
+import httpx
 
 import pytest
 
@@ -33,171 +31,151 @@ def xml_request():
 
 
 @pytest.mark.asyncio
-async def test_getdepartures(xml_request, capsys):
+async def test_getdepartures(httpx_mock, xml_request, capsys):
     """Test departures with default setings."""
     with open("fixtures/result_simple.json") as f:
         result_simple_json = json.load(f, object_hook=date_hook)
     with open("fixtures/result_simple.txt") as f:
         result_text = f.read()
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml_request)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    httpx_mock.add_response(data=xml_request)
 
-            station_id = "3006904"
-            data = await rmv.get_departures(station_id)
-            assert data == result_simple_json
+    rmv = RMVtransport()
 
-            rmv.output()
-            out, err = capsys.readouterr()
-            assert out == result_text
+    station_id = "3006904"
+    data = await rmv.get_departures(station_id)
+
+    assert data == result_simple_json
+
+    rmv.output()
+    out, err = capsys.readouterr()
+    assert out == result_text
+    assert err == ""
 
 
 @pytest.mark.asyncio
-async def test_departures_products(xml_request):
+async def test_departures_products(httpx_mock, xml_request):
     """Test products filter."""
     with open("fixtures/result_products_filter.json") as f:
         result_products_filter_json = json.load(f, object_hook=date_hook)
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml_request)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    httpx_mock.add_response(data=xml_request)
 
-            station_id = "3006904"
-            products = ["S", "RB"]
-            data = await rmv.get_departures(
-                station_id, products=products, max_journeys=50
-            )
-            assert data == result_products_filter_json
+    rmv = RMVtransport()
+
+    station_id = "3006904"
+    products = ["S", "RB"]
+    data = await rmv.get_departures(station_id, products=products, max_journeys=50)
+    assert data == result_products_filter_json
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_departures_error_xml():
+async def test_departures_error_xml(httpx_mock):
     """Test with bad xml."""
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", "<ResC></ResC>")
+    httpx_mock.add_response(data="<ResC></ResC>")
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            await rmv.get_departures(station_id)
+    station_id = "3006904"
+    await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_no_xml():
+async def test_no_xml(httpx_mock):
     """Test with empty xml."""
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", "")
+    httpx_mock.add_response(data="")
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            await rmv.get_departures(station_id)
+    station_id = "3006904"
+    await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_departures_error_server():
+async def test_departures_error_server(httpx_mock):
     """Test server error handling."""
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", aresponses.Response(text="error", status=500))
+    httpx_mock.add_response(data="error", status_code=500)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            await rmv.get_departures(station_id)
+    station_id = "3006904"
+    await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=TypeError)
 async def test_no_station_id():
     """Test no station_id error handling."""
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", aresponses.Response(text="error", status=500))
-
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
-            await rmv.get_departures()
+    rmv = RMVtransport()
+    await rmv.get_departures()
 
 
 @pytest.mark.asyncio
-async def test_departures_bad_request():
+async def test_departures_bad_request(httpx_mock):
     """Test bad xml."""
     with open("fixtures/bad_request.xml") as xml_file:
         xml_request = xml_file.read()
     with open("fixtures/result_bad.json") as json_file:
         result = json.load(json_file, object_hook=date_hook)
 
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml_request)
+    httpx_mock.add_response(data=xml_request)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            direction_id = "3006905"
-            data = await rmv.get_departures(station_id, direction_id)
-            assert data == result
+    station_id = "3006904"
+    direction_id = "3006905"
+    data = await rmv.get_departures(station_id, direction_id)
+    assert data == result
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_no_journeys():
+async def test_no_journeys(httpx_mock):
     """Test with no journeys."""
     with open("fixtures/request_no_journeys.xml") as f:
         xml = f.read()
 
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml)
+    httpx_mock.add_response(data=xml)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            await rmv.get_departures(station_id)
+    station_id = "3006904"
+    await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_no_timestamp():
+async def test_no_timestamp(httpx_mock):
     """Test with no timestamp."""
     with open("fixtures/request_no_timestamp.xml") as f:
         xml = f.read()
 
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml)
+    httpx_mock.add_response(data=xml)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            await rmv.get_departures(station_id)
+    station_id = "3006904"
+    await rmv.get_departures(station_id)
 
 
 @pytest.mark.asyncio
-async def test_midnight():
+async def test_midnight(httpx_mock):
     """Test departures around midnight."""
     with open("fixtures/request_midnight.xml") as f:
         xml = f.read()
     with open("fixtures/result_midnight.json") as f:
         result = json.load(f, object_hook=date_hook)
 
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml)
+    httpx_mock.add_response(data=xml)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station_id = "3006904"
-            data = await rmv.get_departures(station_id)
-            assert data == result
+    station_id = "3006904"
+    data = await rmv.get_departures(station_id)
+    assert data == result
 
 
 @pytest.fixture
@@ -207,66 +185,61 @@ def stops_request():
 
 
 @pytest.mark.asyncio
-async def test_search_station(stops_request):
+async def test_search_station(httpx_mock, stops_request):
     """Test station search."""
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_SEARCH_PATH, "get", stops_request)
+    httpx_mock.add_response(data=stops_request)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station = "Hauptwache"
-            data = await rmv.search_station(station)
-            assert data == {
-                "003000001": {
-                    "name": "Frankfurt (Main) Hauptwache",
-                    "id": "003000001",
-                    "lat": 50.113963,
-                    "long": 8.679292,
-                }
-            }
+    station = "Hauptwache"
+    data = await rmv.search_station(station)
+    assert data == {
+        "003000001": {
+            "name": "Frankfurt (Main) Hauptwache",
+            "id": "003000001",
+            "lat": 50.113963,
+            "long": 8.679292,
+        }
+    }
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test_search_station_fail(stops_request):
+async def test_search_station_fail(httpx_mock):
     """Test failing station search."""
     with open("fixtures/request_no_timestamp.xml") as f:
         xml = f.read()
 
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_SEARCH_PATH, "get", xml)
+    httpx_mock.add_response(data=xml)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    rmv = RMVtransport()
 
-            station = "Hauptwache"
-            data = await rmv.search_station(station)
-            assert data == {
-                "003000001": {
-                    "name": "Frankfurt (Main) Hauptwache",
-                    "id": "003000001",
-                    "lat": 50.113963,
-                    "long": 8.679292,
-                }
-            }
+    station = "Hauptwache"
+    data = await rmv.search_station(station)
+    assert data == {
+        "003000001": {
+            "name": "Frankfurt (Main) Hauptwache",
+            "id": "003000001",
+            "lat": 50.113963,
+            "long": 8.679292,
+        }
+    }
 
 
 @pytest.mark.asyncio
 @pytest.mark.xfail(raises=RMVtransportError)
-async def test__query_rmv_api_fail(stops_request):
+async def test__query_rmv_api_fail(httpx_mock):
     """Test failing station search."""
 
-    async def response_handler(request):
-        await asyncio.sleep(0.01)
-        return aresponses.Response(body="page loaded")
+    def raise_timeout(request, ext: dict):
+        raise httpx.ReadTimeout(
+            f"Unable to read within {ext['timeout']}", request=request
+        )
 
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_SEARCH_PATH, "get", response_handler)
+    httpx_mock.add_callback(raise_timeout)
 
-        with pytest.raises(asyncio.TimeoutError):
-            async with aiohttp.ClientSession() as session:
-                rmv = RMVtransport(session, timeout=0.005)
+    with pytest.raises(httpx.ReadTimeout):
+        rmv = RMVtransport(timeout=0.005)
 
-                url = f"https://{URL}{URL_SEARCH_PATH}"
-                await rmv._query_rmv_api(url)
+        url = f"https://{URL}{URL_SEARCH_PATH}"
+        await rmv._query_rmv_api(url)
