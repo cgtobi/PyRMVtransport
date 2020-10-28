@@ -1,7 +1,5 @@
 """Define tests for the client object."""
 from datetime import datetime
-import aiohttp
-import aresponses
 import logging
 
 import pytest
@@ -28,20 +26,19 @@ def date_hook(json_dict):
 
 
 @pytest.mark.asyncio
-async def test_bug_3006907(capsys):
+async def test_bug_3006907(httpx_mock, capsys):
     """Test bug 3006907."""
     with open("fixtures/bug_3006907.xml") as f:
         xml_request = f.read()
-    async with aresponses.ResponsesMockServer() as arsps:
-        arsps.add(URL, URL_PATH, "get", xml_request)
 
-        async with aiohttp.ClientSession() as session:
-            rmv = RMVtransport(session)
+    httpx_mock.add_response(data=xml_request)
 
-            station_id = "3006907"
-            data = await rmv.get_departures(
-                station_id, max_journeys=50, products=["U-Bahn", "Tram", "Bus", "S"]
-            )
-            assert data["filter"] == "0001111"
-            assert data["stationId"] == "3006907"
-            assert data["station"] == "Wiesbaden Hauptbahnhof"
+    rmv = RMVtransport()
+
+    station_id = "3006907"
+    data = await rmv.get_departures(
+        station_id, max_journeys=50, products=["U-Bahn", "Tram", "Bus", "S"]
+    )
+    assert data["filter"] == "0001111"
+    assert data["stationId"] == "3006907"
+    assert data["station"] == "Wiesbaden Hauptbahnhof"
