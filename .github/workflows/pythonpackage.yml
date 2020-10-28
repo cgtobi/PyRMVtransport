@@ -55,3 +55,8 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
+    - uses: paambaati/codeclimate-action@v2.2.4
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CodeClimate }}
+      with:
+        coverageCommand: coverage xml
