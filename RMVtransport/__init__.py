@@ -2,4 +2,4 @@
 # pylint: disable=C0103
 from .rmvtransport import RMVtransport  # noqa
 
-__version__ = "0.2.10b10"
+__version__ = "0.2.10b11"
