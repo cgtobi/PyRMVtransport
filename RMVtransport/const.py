@@ -6,6 +6,7 @@ PRODUCTS: Dict[str, int] = {
     "ICE": 1,
     "IC": 2,
     "EC": 2,
+    "R": 4,
     "RB": 4,
     "RE": 4,
     "S": 8,
