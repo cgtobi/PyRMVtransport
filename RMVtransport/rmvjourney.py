@@ -1,10 +1,13 @@
 """This class represents a single journey."""
 from datetime import datetime, timedelta
 import html
+import logging
 from typing import List, Dict, Any, Optional
 from lxml import objectify  # type: ignore
 
 from .const import PRODUCTS
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RMVJourney:
@@ -96,6 +99,8 @@ class RMVJourney:
     def _pass_list(self) -> List[Dict[str, Any]]:
         """Extract next stops along the journey."""
         stops: List[Dict[str, Any]] = []
+        if "BasicStop" not in self.journey.PassList.getchildren:
+            return stops
         for stop in self.journey.PassList.BasicStop:
             index = stop.get("index")
             station = stop.Location.Station.HafasName.Text.text
@@ -106,4 +111,8 @@ class RMVJourney:
     def _icon(self) -> str:
         """Extract product icon."""
         pic_url = "https://www.rmv.de/auskunft/s/n/img/products/%i_pic.png"
-        return pic_url % PRODUCTS[self.product]
+        try:
+            return pic_url % PRODUCTS[self.product]
+        except KeyError:
+            _LOGGER.debug("No matching icon for product: %s", self.product)
+            return pic_url % PRODUCTS["Bahn"]
