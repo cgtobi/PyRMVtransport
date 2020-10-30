@@ -99,8 +99,6 @@ class RMVJourney:
     def _pass_list(self) -> List[Dict[str, Any]]:
         """Extract next stops along the journey."""
         stops: List[Dict[str, Any]] = []
-        if "BasicStop" not in self.journey.PassList.getchildren:
-            return stops
         for stop in self.journey.PassList.BasicStop:
             index = stop.get("index")
             station = stop.Location.Station.HafasName.Text.text
