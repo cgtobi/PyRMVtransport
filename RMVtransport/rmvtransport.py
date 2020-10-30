@@ -171,7 +171,7 @@ class RMVtransport:
                     response = await client.get(url)
                     _LOGGER.debug(f"Response from RMV API: {response.status_code}")
                     return response.read()
-        except (asyncio.TimeoutError):
+        except (asyncio.TimeoutError, httpx.ReadTimeout):
             _LOGGER.error("Can not load data from RMV API")
             raise RMVtransportApiConnectionError()
 
