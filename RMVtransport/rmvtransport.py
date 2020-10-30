@@ -56,7 +56,23 @@ class RMVtransport:
 
         self.products_filter = _product_filter(products or ALL_PRODUCTS)
 
-        url = self.generate_url()
+        base_url: str = _base_url()
+        params: Dict[str, Union[str, int]] = {
+            "selectDate": "today",
+            "time": "now",
+            "input": self.station_id,
+            "maxJourneys": self.max_journeys,
+            "boardType": "dep",
+            "productsFilter": self.products_filter,
+            "disableEquivs": "discard_nearby",
+            "output": "xml",
+            "start": "yes",
+        }
+        if self.direction_id:
+            params["dirInput"] = self.direction_id
+
+        url = base_url + urllib.parse.urlencode(params)
+
         xml = await self._query_rmv_api(url)
 
         self.obj = self.extract_data(xml)
@@ -80,24 +96,6 @@ class RMVtransport:
             raise RMVtransportError()
 
         return self.data()
-
-    def generate_url(self) -> str:
-        """Generate url."""
-        params: Dict[str, Union[str, int]] = {
-            "selectDate": "today",
-            "time": "now",
-            "input": self.station_id,
-            "maxJourneys": self.max_journeys,
-            "boardType": "dep",
-            "productsFilter": self.products_filter,
-            "disableEquivs": "discard_nearby",
-            "output": "xml",
-            "start": "yes",
-        }
-        if self.direction_id:
-            params["dirInput"] = self.direction_id
-
-        return _base_url() + urllib.parse.urlencode(params)
 
     def extract_data(self, xml: bytes) -> Any:
         """Extract data from xml."""
