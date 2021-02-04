@@ -16,7 +16,7 @@ from .const import PRODUCTS, ALL_PRODUCTS, MAX_RETRIES, KNOWN_XML_ISSUES
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_URI: str = "http://www.rmv.de/auskunft/bin/jp/"
+BASE_URI: str = "https://www.rmv.de/auskunft/bin/jp/"
 QUERY_PATH: str = "query.exe/"
 GETSTOP_PATH: str = "ajax-getstop.exe/"
 STBOARD_PATH: str = "stboard.exe/"
