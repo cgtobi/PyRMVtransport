@@ -7,7 +7,7 @@ module = "RMVtransport"
 dist-name = "PyRMVtransport"
 author = "cgtobi"
 author-email = "cgtobi@gmail.com"
-home-page = "http://github.com/cgtobi/PyRMVtransport"
+home-page = "https://github.com/cgtobi/PyRMVtransport"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
     "lxml",
