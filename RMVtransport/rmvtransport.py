@@ -86,7 +86,7 @@ class RMVtransport:
             self.station = self._station()
         except RMVtransportDataError:
             _LOGGER.debug(
-                f"XML contains unexpected data " f"{objectify.dump(self.obj)[:100]}"
+                f"XML contains unexpected data {objectify.dump(self.obj)[:100]}"
             )
             raise
 
