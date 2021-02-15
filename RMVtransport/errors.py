@@ -14,6 +14,6 @@ class RMVtransportApiConnectionError(RMVtransportError):
 
 
 class RMVtransportDataError(RMVtransportError):
-    """Whe a error in the XML data is encountered."""
+    """When an error in the XML data is encountered."""
 
     pass
