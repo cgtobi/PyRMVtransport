@@ -74,34 +74,8 @@ class RMVtransport:
         url = base_url + urllib.parse.urlencode(params)
 
         xml = await self._query_rmv_api(url)
-        _LOGGER.debug("XML %s", xml)
 
-        # pylint: disable=I1101
-        retry = 0
-        while retry < MAX_RETRIES:
-            try:
-                self.obj = objectify.fromstring(xml)
-                break
-            except (TypeError, etree.XMLSyntaxError) as err:
-                _LOGGER.debug(f"Exception: {err}")
-                xml_issue = xml.decode().split("\n")[err.lineno - 1]  # type: ignore
-                _LOGGER.debug(xml_issue)
-                _LOGGER.debug("Trying to fix the xml")
-                if xml_issue in KNOWN_XML_ISSUES.keys():
-                    xml = (
-                        xml.decode()
-                        .replace(
-                            xml.decode().split("\n")[err.lineno - 1],  # type: ignore
-                            KNOWN_XML_ISSUES[xml_issue],
-                        )
-                        .encode()
-                    )
-                    _LOGGER.debug(
-                        xml.decode().split("\n")[err.lineno - 1]  # type: ignore
-                    )
-                else:
-                    raise RMVtransportError()
-                retry -= 1
+        self.obj = self.extract_data(xml)
 
         try:
             self.now = self.current_time()
@@ -122,6 +96,36 @@ class RMVtransport:
             raise RMVtransportError()
 
         return self.data()
+
+    def extract_data(self, xml: bytes) -> Any:
+        """Extract data from xml."""
+        # pylint: disable=I1101
+        retry = 0
+        while retry < MAX_RETRIES:
+            try:
+                return objectify.fromstring(xml)
+
+            except (TypeError, etree.XMLSyntaxError) as err:
+                _LOGGER.debug(f"Exception: {err}")
+                xml_issue = xml.decode().split("\n")[err.lineno - 1]  # type: ignore
+                _LOGGER.debug(xml_issue)
+                _LOGGER.debug("Trying to fix the xml")
+                if xml_issue in KNOWN_XML_ISSUES.keys():
+                    xml = (
+                        xml.decode()
+                        .replace(
+                            xml.decode().split("\n")[err.lineno - 1],  # type: ignore
+                            KNOWN_XML_ISSUES[xml_issue],
+                        )
+                        .encode()
+                    )
+                    _LOGGER.debug(
+                        xml.decode().split("\n")[err.lineno - 1]  # type: ignore
+                    )
+                else:
+                    raise RMVtransportError()
+
+                retry -= 1
 
     async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
         """Search station/stop my name."""
@@ -167,7 +171,7 @@ class RMVtransport:
                     response = await client.get(url)
                     _LOGGER.debug(f"Response from RMV API: {response.status_code}")
                     return response.read()
-        except (asyncio.TimeoutError):
+        except (asyncio.TimeoutError, httpx.ReadTimeout):
             _LOGGER.error("Can not load data from RMV API")
             raise RMVtransportApiConnectionError()
 
@@ -177,8 +181,7 @@ class RMVtransport:
         data["station"] = self.station
         data["stationId"] = self.station_id
         data["filter"] = self.products_filter
-
-        journeys = [
+        data["journeys"] = [
             {
                 "product": j.product,
                 "number": j.number,
@@ -196,7 +199,6 @@ class RMVtransport:
                 : self.max_journeys
             ]
         ]
-        data["journeys"] = journeys
         return data
 
     def _station(self) -> str:
