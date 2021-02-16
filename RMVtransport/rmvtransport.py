@@ -45,7 +45,7 @@ class RMVtransport:
 
         self.max_journeys: int
 
-        self.obj: objectify.ObjectifiedElement  # pylint: disable=I1101
+        self.obj: objectify.ObjectifiedElement
         self.journeys: List[RMVJourney] = []
 
     async def get_departures(
@@ -56,31 +56,8 @@ class RMVtransport:
         products: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Fetch data from rmv.de."""
-        self.station_id = station_id
-        self.direction_id = direction_id
-
-        self.max_journeys = max_journeys
-
-        self.products_filter = product_filter(products or ALL_PRODUCTS)
-
-        params: Dict[str, Union[str, int]] = {
-            "selectDate": "today",
-            "time": "now",
-            "input": self.station_id,
-            "maxJourneys": self.max_journeys,
-            "boardType": "dep",
-            "productsFilter": self.products_filter,
-            "disableEquivs": "discard_nearby",
-            "output": "xml",
-            "start": "yes",
-        }
-        if self.direction_id:
-            params["dirInput"] = self.direction_id
-
-        url = base_url() + urllib.parse.urlencode(params)
-
+        url = self.build_journey_query(station_id, direction_id, max_journeys, products)
         xml = await self._query_rmv_api(url)
-
         self.obj = extract_data_from_xml(xml)
 
         try:
@@ -100,6 +77,35 @@ class RMVtransport:
             raise RMVtransportError()
 
         return self.travel_data()
+
+    def build_journey_query(
+        self,
+        station_id: str,
+        direction_id: Optional[str] = None,
+        max_journeys: int = 20,
+        products: Optional[List[str]] = None,
+    ) -> str:
+        """Build query to request journey data."""
+        self.station_id = station_id
+        self.direction_id = direction_id
+        self.max_journeys = max_journeys
+        self.products_filter = product_filter(products or ALL_PRODUCTS)
+
+        params: Dict[str, Union[str, int]] = {
+            "selectDate": "today",
+            "time": "now",
+            "input": self.station_id,
+            "maxJourneys": self.max_journeys,
+            "boardType": "dep",
+            "productsFilter": self.products_filter,
+            "disableEquivs": "discard_nearby",
+            "output": "xml",
+            "start": "yes",
+        }
+        if self.direction_id:
+            params["dirInput"] = self.direction_id
+
+        return base_url() + urllib.parse.urlencode(params)
 
     async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
         """Search station/stop my name."""
