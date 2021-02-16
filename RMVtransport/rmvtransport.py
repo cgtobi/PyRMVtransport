@@ -1,29 +1,33 @@
 """A module to query bus and train departure times."""
 import asyncio
-import urllib.request
-import urllib.parse
-from datetime import datetime
 import json
 import logging
-from typing import List, Dict, Any, Optional, Union
-import httpx
-import async_timeout
-from lxml import objectify, etree  # type: ignore
+import urllib.parse
+import urllib.request
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
+import async_timeout
+import httpx
+from lxml import etree, objectify  # type: ignore
+
+from .const import (
+    ALL_PRODUCTS,
+    BASE_URI,
+    GETSTOP_PATH,
+    KNOWN_XML_ISSUES,
+    MAX_RETRIES,
+    PRODUCTS,
+    STBOARD_PATH,
+)
 from .errors import (
-    RMVtransportError,
     RMVtransportApiConnectionError,
     RMVtransportDataError,
+    RMVtransportError,
 )
 from .rmvjourney import RMVJourney
-from .const import PRODUCTS, ALL_PRODUCTS, MAX_RETRIES, KNOWN_XML_ISSUES
 
 _LOGGER = logging.getLogger(__name__)
-
-BASE_URI: str = "https://www.rmv.de/auskunft/bin/jp/"
-QUERY_PATH: str = "query.exe/"
-GETSTOP_PATH: str = "ajax-getstop.exe/"
-STBOARD_PATH: str = "stboard.exe/"
 
 
 class RMVtransport:
@@ -79,14 +83,14 @@ class RMVtransport:
 
         xml = await self._query_rmv_api(url)
 
-        self.obj = self.extract_data(xml)
+        self.obj = extract_data(xml)
 
         try:
             self.now = self.current_time()
             self.station = self._station()
         except RMVtransportDataError:
             _LOGGER.debug(
-                f"XML contains unexpected data {objectify.dump(self.obj)[:100]}"
+                "XML contains unexpected data %s", objectify.dump(self.obj)[:100]
             )
             raise
 
@@ -95,40 +99,10 @@ class RMVtransport:
             for journey in self.obj.SBRes.JourneyList.Journey:
                 self.journeys.append(RMVJourney(journey, self.now))
         except AttributeError:
-            _LOGGER.debug(f"Extract journeys: {objectify.dump(self.obj.SBRes)}")
+            _LOGGER.debug("Extract journeys: %s", objectify.dump(self.obj.SBRes))
             raise RMVtransportError()
 
         return self.data()
-
-    def extract_data(self, xml: bytes) -> Any:
-        """Extract data from xml."""
-        # pylint: disable=I1101
-        retry = 0
-        while retry < MAX_RETRIES:
-            try:
-                return objectify.fromstring(xml)
-
-            except (TypeError, etree.XMLSyntaxError) as err:
-                _LOGGER.debug(f"Exception: {err}")
-                xml_issue = xml.decode().split("\n")[err.lineno - 1]  # type: ignore
-                _LOGGER.debug(xml_issue)
-                _LOGGER.debug("Trying to fix the xml")
-                if xml_issue in KNOWN_XML_ISSUES.keys():
-                    xml = (
-                        xml.decode()
-                        .replace(
-                            xml.decode().split("\n")[err.lineno - 1],  # type: ignore
-                            KNOWN_XML_ISSUES[xml_issue],
-                        )
-                        .encode()
-                    )
-                    _LOGGER.debug(
-                        xml.decode().split("\n")[err.lineno - 1]  # type: ignore
-                    )
-                else:
-                    raise RMVtransportError()
-
-                retry -= 1
 
     async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
         """Search station/stop my name."""
@@ -141,7 +115,7 @@ class RMVtransport:
         }
 
         url = base_url + urllib.parse.urlencode(params)
-        _LOGGER.debug(f"URL: {url}")
+        _LOGGER.debug("URL: %s", url)
 
         res = await self._query_rmv_api(url)
         data = res.decode("utf-8")
@@ -151,7 +125,7 @@ class RMVtransport:
                 data[data.find("{") : data.rfind("}") + 1]  # noqa: E203
             )
         except (TypeError, json.JSONDecodeError):
-            _LOGGER.debug(f"Error in JSON: {data[:100]}...")
+            _LOGGER.debug("Error in JSON: %s...", data[:100])
             raise RMVtransportError()
 
         suggestions = json_data["suggestions"][:max_results]
@@ -172,7 +146,7 @@ class RMVtransport:
             with async_timeout.timeout(self._timeout):
                 async with httpx.AsyncClient() as client:
                     response = await client.get(url)
-                    _LOGGER.debug(f"Response from RMV API: {response.status_code}")
+                    _LOGGER.debug("Response from RMV API: %s", response.status_code)
                     return response.read()
         except (asyncio.TimeoutError, httpx.ReadTimeout, httpx.ConnectTimeout):
             _LOGGER.error("Can not load data from RMV API")
@@ -220,26 +194,27 @@ class RMVtransport:
 
     def output(self) -> None:
         """Pretty print travel times."""
-        print("%s - %s" % (self.station, self.now))
-        print(self.products_filter)
+        result = [f"{self.station} - {self.now}"]
 
         for j in sorted(self.journeys, key=lambda k: k.real_departure)[
             : self.max_journeys
         ]:
-            print("-------------")
-            print(f"{j.product}: {j.number} ({j.train_id})")
-            print(f"Richtung: {j.direction}")
-            print(f"Abfahrt in {j.real_departure} min.")
-            print(f"Abfahrt {j.departure.time()} (+{j.delay})")
-            print(f"Nächste Haltestellen: {([s['station'] for s in j.stops])}")
+            result.append("-------------")
+            result.append(f"{j.product}: {j.number} ({j.train_id})")
+            result.append(f"Richtung: {j.direction}")
+            result.append(f"Abfahrt in {j.real_departure} min.")
+            result.append(f"Abfahrt {j.departure.time()} (+{j.delay})")
+            result.append(f"Nächste Haltestellen: {([s['station'] for s in j.stops])}")
             if j.info:
-                print(f"Hinweis: {j.info}")
-                print(f"Hinweis (lang): {j.info_long}")
-            print(f"Icon: {j.icon}")
+                result.append(f"Hinweis: {j.info}")
+                result.append(f"Hinweis (lang): {j.info_long}")
+            result.append(f"Icon: {j.icon}")
+
+        print("\n".join(result))
 
 
 def _product_filter(products) -> str:
-    """Calculate the product filter."""
+    """Calcularte the product filter."""
     _filter = sum({PRODUCTS[p] for p in products})
     return format(_filter, "b")[::-1]
 
@@ -257,3 +232,37 @@ def convert_coordinates(value: str) -> float:
     if len(value) < 8:
         return float(value[0] + "." + value[1:])
     return float(value[0:2] + "." + value[2:])
+
+
+def extract_data(xml: bytes) -> Any:
+    """Extract data from xml."""
+    retry = 0
+    while retry < MAX_RETRIES:
+        try:
+            return objectify.fromstring(xml)
+
+        except (TypeError, etree.XMLSyntaxError) as err:
+            _LOGGER.debug("Exception: %s", err)
+            xml = fix_xml(xml, err)
+            retry -= 1
+
+
+def fix_xml(data: bytes, err: TypeError) -> Any:
+    """Try to fix known issues in XML data."""
+    xml_issue = data.decode().split("\n")[err.lineno - 1]  # type: ignore
+    _LOGGER.debug(xml_issue)
+    _LOGGER.debug("Trying to fix the xml")
+    if xml_issue in KNOWN_XML_ISSUES.keys():
+        data = (
+            data.decode()
+            .replace(
+                data.decode().split("\n")[err.lineno - 1],  # type: ignore
+                KNOWN_XML_ISSUES[xml_issue],
+            )
+            .encode()
+        )
+        _LOGGER.debug(data.decode().split("\n")[err.lineno - 1])  # type: ignore
+    else:
+        raise RMVtransportError()
+
+    return data
