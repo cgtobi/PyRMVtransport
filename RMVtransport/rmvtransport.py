@@ -106,29 +106,7 @@ class RMVtransport:
 
     async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
         """Search station/stop my name."""
-        base_url: str = _base_url(GETSTOP_PATH)
-
-        params: Dict[str, Union[str, int]] = {
-            "getstop": 1,
-            "REQ0JourneyStopsS0A": max_results,
-            "REQ0JourneyStopsS0G": name,
-        }
-
-        url = base_url + urllib.parse.urlencode(params)
-        _LOGGER.debug("URL: %s", url)
-
-        res = await self._query_rmv_api(url)
-        data = res.decode("utf-8")
-
-        try:
-            json_data = json.loads(
-                data[data.find("{") : data.rfind("}") + 1]  # noqa: E203
-            )
-        except (TypeError, json.JSONDecodeError):
-            _LOGGER.debug("Error in JSON: %s...", data[:100])
-            raise RMVtransportError()
-
-        suggestions = json_data["suggestions"][:max_results]
+        suggestions: List = await self._fetch_sugestions(name, max_results)
 
         return {
             item["extId"]: {
@@ -140,17 +118,44 @@ class RMVtransport:
             for item in suggestions
         }
 
+    async def _fetch_sugestions(
+        self, name: str, max_results: int
+    ) -> List[Optional[Dict]]:
+        """Fetch suggestsions for the given station name from the backend."""
+        base_url: str = _base_url(GETSTOP_PATH)
+
+        params: Dict[str, Union[str, int]] = {
+            "getstop": 1,
+            "REQ0JourneyStopsS0A": max_results,
+            "REQ0JourneyStopsS0G": name,
+        }
+
+        url = base_url + urllib.parse.urlencode(params)
+        _LOGGER.debug("URL: %s", url)
+
+        response = await self._query_rmv_api(url)
+        data = _extract_json_data(response)
+
+        try:
+            json_data = json.loads(data)
+        except (TypeError, json.JSONDecodeError):
+            _LOGGER.debug("Error in JSON: %s...", data[:100])
+            raise RMVtransportError()
+
+        return list(json_data["suggestions"][:max_results])
+
     async def _query_rmv_api(self, url: str) -> Any:
         """Query RMV API."""
-        try:
-            with async_timeout.timeout(self._timeout):
-                async with httpx.AsyncClient() as client:
+        with async_timeout.timeout(self._timeout):
+            async with httpx.AsyncClient() as client:
+                try:
                     response = await client.get(url)
-                    _LOGGER.debug("Response from RMV API: %s", response.status_code)
-                    return response.read()
-        except (asyncio.TimeoutError, httpx.ReadTimeout, httpx.ConnectTimeout):
-            _LOGGER.error("Can not load data from RMV API")
-            raise RMVtransportApiConnectionError()
+                except (asyncio.TimeoutError, httpx.ReadTimeout, httpx.ConnectTimeout):
+                    _LOGGER.error("Can not load data from RMV API")
+                    raise RMVtransportApiConnectionError()
+
+        _LOGGER.debug("Response from RMV API: %s", response.status_code)
+        return response.read()
 
     def data(self) -> Dict[str, Any]:
         """Return travel data."""
@@ -247,3 +252,9 @@ def fix_xml(data: bytes, err: etree.XMLSyntaxError) -> Any:
         raise RMVtransportError()
 
     return data.decode().replace(xml_issue, KNOWN_XML_ISSUES[xml_issue]).encode()
+
+
+def _extract_json_data(response) -> str:
+    """Extract json from response."""
+    data = response.decode("utf-8")
+    return str(data[data.find("{") : data.rfind("}") + 1])  # noqa: E203

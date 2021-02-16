@@ -1,5 +1,4 @@
 """Define tests for the client object."""
-from datetime import datetime
 import json
 import httpx
 
@@ -8,26 +7,7 @@ import pytest
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import RMVtransportError
 
-
-URL = "www.rmv.de"
-URL_PATH = "/auskunft/bin/jp/stboard.exe/dn"
-URL_SEARCH_PATH = "/auskunft/bin/jp/ajax-getstop.exe/dn"
-
-
-def date_hook(json_dict):
-    """JSON datetime parser."""
-    for (key, value) in json_dict.items():
-        try:
-            json_dict[key] = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
-        except (TypeError, ValueError):
-            pass
-    return json_dict
-
-
-@pytest.fixture
-def xml_request():
-    with open("fixtures/request.xml") as f:
-        return f.read()
+from .common import date_hook, URL, URL_SEARCH_PATH
 
 
 @pytest.mark.asyncio
@@ -176,12 +156,6 @@ async def test_midnight(httpx_mock):
     station_id = "3006904"
     data = await rmv.get_departures(station_id)
     assert data == result
-
-
-@pytest.fixture
-def stops_request():
-    with open("fixtures/stops.response") as f:
-        return f.read()
 
 
 @pytest.mark.asyncio
