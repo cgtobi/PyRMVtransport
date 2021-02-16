@@ -39,7 +39,6 @@ class RMVtransport:
 
         self.now: datetime
 
-        self.station: str
         self.station_id: str
         self.direction_id: Optional[str]
         self.products_filter: str
@@ -62,9 +61,8 @@ class RMVtransport:
 
         self.max_journeys = max_journeys
 
-        self.products_filter = _product_filter(products or ALL_PRODUCTS)
+        self.products_filter = product_filter(products or ALL_PRODUCTS)
 
-        base_url: str = _base_url()
         params: Dict[str, Union[str, int]] = {
             "selectDate": "today",
             "time": "now",
@@ -79,15 +77,14 @@ class RMVtransport:
         if self.direction_id:
             params["dirInput"] = self.direction_id
 
-        url = base_url + urllib.parse.urlencode(params)
+        url = base_url() + urllib.parse.urlencode(params)
 
         xml = await self._query_rmv_api(url)
 
-        self.obj = extract_data(xml)
+        self.obj = extract_data_from_xml(xml)
 
         try:
             self.now = self.current_time()
-            self.station = self._station()
         except RMVtransportDataError:
             _LOGGER.debug(
                 "XML contains unexpected data %s", objectify.dump(self.obj)[:100]
@@ -102,7 +99,7 @@ class RMVtransport:
             _LOGGER.debug("Extract journeys: %s", objectify.dump(self.obj.SBRes))
             raise RMVtransportError()
 
-        return self.data()
+        return self.travel_data()
 
     async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
         """Search station/stop my name."""
@@ -122,19 +119,17 @@ class RMVtransport:
         self, name: str, max_results: int
     ) -> List[Optional[Dict]]:
         """Fetch suggestsions for the given station name from the backend."""
-        base_url: str = _base_url(GETSTOP_PATH)
-
         params: Dict[str, Union[str, int]] = {
             "getstop": 1,
             "REQ0JourneyStopsS0A": max_results,
             "REQ0JourneyStopsS0G": name,
         }
 
-        url = base_url + urllib.parse.urlencode(params)
+        url = base_url(GETSTOP_PATH) + urllib.parse.urlencode(params)
         _LOGGER.debug("URL: %s", url)
 
         response = await self._query_rmv_api(url)
-        data = _extract_json_data(response)
+        data = extract_json_data(response)
 
         try:
             json_data = json.loads(data)
@@ -157,14 +152,14 @@ class RMVtransport:
         _LOGGER.debug("Response from RMV API: %s", response.status_code)
         return response.read()
 
-    def data(self) -> Dict[str, Any]:
+    def travel_data(self) -> Dict[str, Any]:
         """Return travel data."""
-        data: Dict[str, Any] = {}
-        data["station"] = self.station
-        data["stationId"] = self.station_id
-        data["filter"] = self.products_filter
-        data["journeys"] = self.build_journey_list()
-        return data
+        return {
+            "station": self.station,
+            "stationId": self.station_id,
+            "filter": self.products_filter,
+            "journeys": self.build_journey_list(),
+        }
 
     def build_journey_list(self) -> List[Dict]:
         """Build list of journeys."""
@@ -175,7 +170,8 @@ class RMVtransport:
             ]
         ]
 
-    def _station(self) -> str:
+    @property
+    def station(self) -> str:
         """Extract station name."""
         return str(self.obj.SBRes.SBReq.Start.Station.HafasName.Text.pyval)
 
@@ -210,13 +206,13 @@ class RMVtransport:
         print("\n".join(result))
 
 
-def _product_filter(products) -> str:
+def product_filter(products) -> str:
     """Calculate the product filter."""
     _filter = sum({PRODUCTS[p] for p in products})
     return format(_filter, "b")[::-1]
 
 
-def _base_url(path: str = STBOARD_PATH) -> str:
+def base_url(path: str = STBOARD_PATH) -> str:
     """Build base url."""
     _lang: str = "d"
     _type: str = "n"
@@ -231,7 +227,7 @@ def convert_coordinates(value: str) -> float:
     return float(value[0:2] + "." + value[2:])
 
 
-def extract_data(xml: bytes) -> Any:
+def extract_data_from_xml(xml: bytes) -> Any:
     """Extract data from xml."""
     retry = 0
     while retry < MAX_RETRIES:
@@ -254,7 +250,7 @@ def fix_xml(data: bytes, err: etree.XMLSyntaxError) -> Any:
     return data.decode().replace(xml_issue, KNOWN_XML_ISSUES[xml_issue]).encode()
 
 
-def _extract_json_data(response) -> str:
+def extract_json_data(response) -> str:
     """Extract json from response."""
     data = response.decode("utf-8")
     return str(data[data.find("{") : data.rfind("}") + 1])  # noqa: E203
