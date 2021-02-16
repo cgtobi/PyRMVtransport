@@ -158,8 +158,17 @@ class RMVtransport:
         data["station"] = self.station
         data["stationId"] = self.station_id
         data["filter"] = self.products_filter
-        data["journeys"] = build_journey_list(self.journeys, self.max_journeys)
+        data["journeys"] = self.build_journey_list()
         return data
+
+    def build_journey_list(self) -> List[Dict]:
+        """Build list of journeys."""
+        return [
+            j.as_dict()
+            for j in sorted(self.journeys, key=lambda k: k.real_departure)[
+                : self.max_journeys
+            ]
+        ]
 
     def _station(self) -> str:
         """Extract station name."""
@@ -238,11 +247,3 @@ def fix_xml(data: bytes, err: etree.XMLSyntaxError) -> Any:
         raise RMVtransportError()
 
     return data.decode().replace(xml_issue, KNOWN_XML_ISSUES[xml_issue]).encode()
-
-
-def build_journey_list(journeys, max_journeys) -> List[Dict]:
-    """Build list of journeys."""
-    return [
-        j.as_dict()
-        for j in sorted(journeys, key=lambda k: k.real_departure)[:max_journeys]
-    ]
