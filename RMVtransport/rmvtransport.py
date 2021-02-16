@@ -10,7 +10,11 @@ import httpx
 import async_timeout
 from lxml import objectify, etree  # type: ignore
 
-from .errors import RMVtransportError, RMVtransportApiConnectionError
+from .errors import (
+    RMVtransportError,
+    RMVtransportApiConnectionError,
+    RMVtransportDataError,
+)
 from .rmvjourney import RMVJourney
 from .const import PRODUCTS, ALL_PRODUCTS, MAX_RETRIES, KNOWN_XML_ISSUES
 
@@ -25,9 +29,9 @@ STBOARD_PATH: str = "stboard.exe/"
 class RMVtransport:
     """Connection data and travel information."""
 
-    def __init__(self, timeout: int = 10) -> None:
+    def __init__(self, timeout: float = 10) -> None:
         """Initialize connection data."""
-        self._timeout: int = timeout
+        self._timeout: float = timeout
 
         self.now: datetime
 
@@ -80,12 +84,11 @@ class RMVtransport:
         try:
             self.now = self.current_time()
             self.station = self._station()
-        except (TypeError, AttributeError, ValueError) as err:
+        except RMVtransportDataError:
             _LOGGER.debug(
-                f"Time/Station TypeError or AttributeError {err} "
-                f"{objectify.dump(self.obj)[:100]}"
+                f"XML contains unexpected data {objectify.dump(self.obj)[:100]}"
             )
-            raise RMVtransportError()
+            raise
 
         self.journeys.clear()
         try:
@@ -171,7 +174,7 @@ class RMVtransport:
                     response = await client.get(url)
                     _LOGGER.debug(f"Response from RMV API: {response.status_code}")
                     return response.read()
-        except (asyncio.TimeoutError, httpx.ReadTimeout):
+        except (asyncio.TimeoutError, httpx.ReadTimeout, httpx.ConnectTimeout):
             _LOGGER.error("Can not load data from RMV API")
             raise RMVtransportApiConnectionError()
 
@@ -207,8 +210,12 @@ class RMVtransport:
 
     def current_time(self) -> datetime:
         """Extract current time."""
-        _date = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("date"), "%Y%m%d")
-        _time = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("time"), "%H:%M")
+        try:
+            _date = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("date"), "%Y%m%d")
+            _time = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("time"), "%H:%M")
+        except (ValueError, AttributeError):
+            raise RMVtransportDataError()
+
         return datetime.combine(_date.date(), _time.time())
 
     def output(self) -> None:
