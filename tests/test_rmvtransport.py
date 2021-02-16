@@ -47,7 +47,7 @@ async def test_getdepartures(httpx_mock, xml_request, capsys):
 
     assert data == result_simple_json
 
-    rmv.output()
+    rmv.print()
     out, err = capsys.readouterr()
     assert out == result_text
     assert err == ""

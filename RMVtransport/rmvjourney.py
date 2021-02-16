@@ -21,6 +21,22 @@ class RMVJourney:
         self._now: datetime = now
         self._attr_types = self._journey.JourneyAttributeList.xpath("*/Attribute/@type")
 
+    def as_dict(self) -> Dict:
+        """Build journey dictionary."""
+        return {
+            "product": self.product,
+            "number": self.number,
+            "trainId": self.train_id,
+            "direction": self.direction,
+            "departure_time": self.real_departure_time,
+            "minutes": self.real_departure,
+            "delay": self.delay,
+            "stops": self.stops,
+            "info": self.info,
+            "info_long": self.info_long,
+            "icon": self.icon,
+        }
+
     @property
     def number(self) -> str:
         """Return the number of the route."""
@@ -72,9 +88,14 @@ class RMVJourney:
         return self._info_long()
 
     @property
-    def stops(self) -> List[Dict]:
+    def _stops(self) -> List[Dict]:
         """Return list of stops along the journey."""
         return self._pass_list()
+
+    @property
+    def stops(self) -> List[str]:
+        """Return list of stops along the journey."""
+        return [s["station"] for s in self._stops]
 
     @property
     def icon(self) -> str:

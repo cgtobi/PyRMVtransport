@@ -158,24 +158,7 @@ class RMVtransport:
         data["station"] = self.station
         data["stationId"] = self.station_id
         data["filter"] = self.products_filter
-        data["journeys"] = [
-            {
-                "product": j.product,
-                "number": j.number,
-                "trainId": j.train_id,
-                "direction": j.direction,
-                "departure_time": j.real_departure_time,
-                "minutes": j.real_departure,
-                "delay": j.delay,
-                "stops": [s["station"] for s in j.stops],
-                "info": j.info,
-                "info_long": j.info_long,
-                "icon": j.icon,
-            }
-            for j in sorted(self.journeys, key=lambda k: k.real_departure)[
-                : self.max_journeys
-            ]
-        ]
+        data["journeys"] = build_journey_list(self.journeys, self.max_journeys)
         return data
 
     def _station(self) -> str:
@@ -192,7 +175,7 @@ class RMVtransport:
 
         return datetime.combine(_date.date(), _time.time())
 
-    def output(self) -> None:
+    def print(self) -> None:
         """Pretty print travel times."""
         result = [f"{self.station} - {self.now}"]
 
@@ -204,7 +187,7 @@ class RMVtransport:
             result.append(f"Richtung: {j.direction}")
             result.append(f"Abfahrt in {j.real_departure} min.")
             result.append(f"Abfahrt {j.departure.time()} (+{j.delay})")
-            result.append(f"Nächste Haltestellen: {([s['station'] for s in j.stops])}")
+            result.append(f"Nächste Haltestellen: {(j.stops)}")
             if j.info:
                 result.append(f"Hinweis: {j.info}")
                 result.append(f"Hinweis (lang): {j.info_long}")
@@ -214,7 +197,7 @@ class RMVtransport:
 
 
 def _product_filter(products) -> str:
-    """Calcularte the product filter."""
+    """Calculate the product filter."""
     _filter = sum({PRODUCTS[p] for p in products})
     return format(_filter, "b")[::-1]
 
@@ -241,28 +224,25 @@ def extract_data(xml: bytes) -> Any:
         try:
             return objectify.fromstring(xml)
 
-        except (TypeError, etree.XMLSyntaxError) as err:
-            _LOGGER.debug("Exception: %s", err)
+        except etree.XMLSyntaxError as err:
             xml = fix_xml(xml, err)
             retry -= 1
 
 
-def fix_xml(data: bytes, err: TypeError) -> Any:
+def fix_xml(data: bytes, err: etree.XMLSyntaxError) -> Any:
     """Try to fix known issues in XML data."""
-    xml_issue = data.decode().split("\n")[err.lineno - 1]  # type: ignore
-    _LOGGER.debug(xml_issue)
-    _LOGGER.debug("Trying to fix the xml")
-    if xml_issue in KNOWN_XML_ISSUES.keys():
-        data = (
-            data.decode()
-            .replace(
-                data.decode().split("\n")[err.lineno - 1],  # type: ignore
-                KNOWN_XML_ISSUES[xml_issue],
-            )
-            .encode()
-        )
-        _LOGGER.debug(data.decode().split("\n")[err.lineno - 1])  # type: ignore
-    else:
+    xml_issue = data.decode().split("\n")[err.lineno - 1]
+
+    if xml_issue not in KNOWN_XML_ISSUES.keys():
+        _LOGGER.debug("Unknown xml issue in: %s", xml_issue)
         raise RMVtransportError()
 
-    return data
+    return data.decode().replace(xml_issue, KNOWN_XML_ISSUES[xml_issue]).encode()
+
+
+def build_journey_list(journeys, max_journeys) -> List[Dict]:
+    """Build list of journeys."""
+    return [
+        j.as_dict()
+        for j in sorted(journeys, key=lambda k: k.real_departure)[:max_journeys]
+    ]
