@@ -1,10 +1,14 @@
 """This class represents a single journey."""
-from datetime import datetime, timedelta
 import html
-from typing import List, Dict, Any, Optional
+import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 from lxml import objectify  # type: ignore
 
-from .const import PRODUCTS
+from .const import IMG_URL, PRODUCTS
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RMVJourney:
@@ -13,47 +17,106 @@ class RMVJourney:
     # pylint: disable=I1101
     def __init__(self, journey: objectify.ObjectifiedElement, now: datetime) -> None:
         """Initialize the journey object."""
-        self.journey: objectify.ObjectifiedElement = journey
-        self.now: datetime = now
-        self.attr_types = self.journey.JourneyAttributeList.xpath("*/Attribute/@type")
+        self._journey: objectify.ObjectifiedElement = journey
+        self._now: datetime = now
+        self._attr_types = self._journey.JourneyAttributeList.xpath("*/Attribute/@type")
 
-        self.name: str = self._extract("NAME")
-        self.number: str = self._extract("NUMBER")
-        self.product: str = self._extract("CATEGORY")
-        self.train_id: str = self.journey.get("trainId")
-        self.departure: datetime = self._departure()
-        self.delay: int = self._delay()
-        self.real_departure_time: datetime = self._real_departure_time()
-        self.real_departure: int = self._real_departure()
-        self.direction = self._extract("DIRECTION")
-        self.info = self._info()
-        self.info_long = self._info_long()
-        self.platform = self._platform()
-        self.stops = self._pass_list()
-        self.icon = self._icon()
+    def as_dict(self) -> Dict:
+        """Build journey dictionary."""
+        return {
+            "product": self.product,
+            "number": self.number,
+            "trainId": self.train_id,
+            "direction": self.direction,
+            "departure_time": self.real_departure_time,
+            "minutes": self.real_departure,
+            "delay": self.delay,
+            "stops": self.stops,
+            "info": self.info,
+            "info_long": self.info_long,
+            "icon": self.icon,
+        }
 
-    def _platform(self) -> Optional[str]:
-        """Extract platform."""
-        try:
-            return str(self.journey.MainStop.BasicStop.Dep.Platform.text)
-        except AttributeError:
-            return None
+    @property
+    def number(self) -> str:
+        """Return the number of the route."""
+        return self._extract("NUMBER")
+
+    @property
+    def product(self) -> str:
+        """Return the product category."""
+        return self._extract("CATEGORY")
+
+    @property
+    def train_id(self) -> str:
+        """Return the train id."""
+        return str(self._journey.get("trainId"))
+
+    @property
+    def departure(self) -> datetime:
+        """Return time of departure."""
+        return self._departure()
+
+    @property
+    def delay(self) -> int:
+        """Return current delay for departure."""
+        return self._delay()
+
+    @property
+    def real_departure_time(self) -> datetime:
+        """Return the real departure time."""
+        return self._real_departure_time()
+
+    @property
+    def real_departure(self) -> int:
+        """Return minutes until departure."""
+        return self._real_departure()
+
+    @property
+    def direction(self) -> str:
+        """Return the direction of travel."""
+        return self._extract("DIRECTION")
+
+    @property
+    def info(self) -> Optional[str]:
+        """Return journey information."""
+        return self._info()
+
+    @property
+    def info_long(self) -> Optional[str]:
+        """Return long journey information."""
+        return self._info_long()
+
+    @property
+    def _stops(self) -> List[Dict]:
+        """Return list of stops along the journey."""
+        return self._pass_list()
+
+    @property
+    def stops(self) -> List[str]:
+        """Return list of stops along the journey."""
+        return [s["station"] for s in self._stops]
+
+    @property
+    def icon(self) -> str:
+        """Return icon url for the means of transport."""
+        return self._icon()
 
     def _delay(self) -> int:
         """Extract departure delay."""
         try:
-            return int(self.journey.MainStop.BasicStop.Dep.Delay.text)
+            return int(self._journey.MainStop.BasicStop.Dep.Delay.text)
         except AttributeError:
             return 0
 
     def _departure(self) -> datetime:
         """Extract departure time."""
         departure_time = datetime.strptime(
-            self.journey.MainStop.BasicStop.Dep.Time.text, "%H:%M"
+            self._journey.MainStop.BasicStop.Dep.Time.text, "%H:%M"
         ).time()
-        if departure_time > (self.now - timedelta(hours=1)).time():
-            return datetime.combine(self.now.date(), departure_time)
-        return datetime.combine(self.now.date() + timedelta(days=1), departure_time)
+        if departure_time > (self._now - timedelta(hours=1)).time():
+            return datetime.combine(self._now.date(), departure_time)
+        return datetime.combine(self._now.date() + timedelta(days=1), departure_time)
 
     def _real_departure_time(self) -> datetime:
         """Calculate actual departure time."""
@@ -61,12 +124,12 @@ class RMVJourney:
 
     def _real_departure(self) -> int:
         """Calculate actual minutes left for departure."""
-        return round((self.real_departure_time - self.now).seconds / 60)
+        return round((self.real_departure_time - self._now).seconds / 60)
 
     def _extract(self, attribute) -> str:
         """Extract train information."""
-        attr_data = self.journey.JourneyAttributeList.JourneyAttribute[
-            self.attr_types.index(attribute)
+        attr_data = self._journey.JourneyAttributeList.JourneyAttribute[
+            self._attr_types.index(attribute)
         ].Attribute
         attr_variants = attr_data.xpath("AttributeVariant/@type")
         try:
@@ -78,7 +141,7 @@ class RMVJourney:
     def _info(self) -> Optional[str]:
         """Extract journey information."""
         try:
-            return str(html.unescape(self.journey.InfoTextList.InfoText.get("text")))
+            return str(html.unescape(self._journey.InfoTextList.InfoText.get("text")))
         except AttributeError:
             return None
 
@@ -86,7 +149,7 @@ class RMVJourney:
         """Extract journey information."""
         try:
             return str(
-                html.unescape(self.journey.InfoTextList.InfoText.get("textL")).replace(
+                html.unescape(self._journey.InfoTextList.InfoText.get("textL")).replace(
                     "<br />", "\n"
                 )
             )
@@ -96,7 +159,7 @@ class RMVJourney:
     def _pass_list(self) -> List[Dict[str, Any]]:
         """Extract next stops along the journey."""
         stops: List[Dict[str, Any]] = []
-        for stop in self.journey.PassList.BasicStop:
+        for stop in self._journey.PassList.BasicStop:
             index = stop.get("index")
             station = stop.Location.Station.HafasName.Text.text
             station_id = stop.Location.Station.ExternalId.text
@@ -105,5 +168,9 @@ class RMVJourney:
 
     def _icon(self) -> str:
         """Extract product icon."""
-        pic_url = "https://www.rmv.de/auskunft/s/n/img/products/%i_pic.png"
-        return pic_url % PRODUCTS[self.product]
+        pic_url = IMG_URL
+        try:
+            return pic_url % PRODUCTS[self.product]
+        except KeyError:
+            _LOGGER.debug("No matching icon for product: %s", self.product)
+            return pic_url % PRODUCTS["Bahn"]

@@ -1,5 +1,8 @@
-"""Define module-level imports."""
+"""Python library to make use of transport information from opendata.rmv.de."""
 # pylint: disable=C0103
 from .rmvtransport import RMVtransport  # noqa
 
-__version__ = "0.2.10"
+MAJOR_VERSION = 0
+MINOR_VERSION = 3
+PATCH_VERSION = 0
+__version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}.{PATCH_VERSION}"

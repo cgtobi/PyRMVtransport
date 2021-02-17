@@ -1,9 +1,12 @@
 # PyRMVtransport :bus:
+
 Python library to make use of transport information from opendata.rmv.de.
 
 [![GitHub Actions](https://github.com/cgtobi/PyRMVtransport/workflows/Python%20package/badge.svg)](https://github.com/cgtobi/PyRMVtransport/actions?workflow=Python+package)
 [![PyPi](https://img.shields.io/pypi/v/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport)
+
 <!-- [![PyPi](https://img.shields.io/pypi/pyversions/PyRMVtransport.svg)](https://pypi.python.org/pypi/PyRMVtransport) -->
+
 [![PyPi](https://img.shields.io/pypi/l/PyRMVtransport.svg)](https://github.com/cgtobi/PyRMVtransport/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/cgtobi/PyRMVtransport/branch/master/graph/badge.svg)](https://codecov.io/gh/cgtobi/PyRMVtransport)
 [![Maintainability](https://api.codeclimate.com/v1/badges/9eeb0f9a9359b79205ad/maintainability)](https://codeclimate.com/github/cgtobi/PyRMVtransport/maintainability)
@@ -24,23 +27,23 @@ from RMVtransport import RMVtransport
 
 async def main():
     """The main part of the example script."""
-    async with aiohttp.ClientSession() as session:
-        rmv = RMVtransport(session)
+    async with aiohttp.ClientSession():
+        rmv = RMVtransport()
 
         # Get the data
         try:
             # Departures for station 3006907 (Wiesbaden Hauptbahnhof)
             # max. 5 results
             # only specified products (S-Bahn, U-Bahn, Tram)
-            data = await rmv.get_departures(station_id='3006907',
-                                            products=['S', 'U-Bahn', 'Tram'],
-                                            max_journeys=5)
+            data = await rmv.get_departures(
+                station_id="3006907", products=["S", "U-Bahn", "Tram"], max_journeys=5
+            )
 
             # Use the JSON output
             print(data)
 
             # or pretty print
-            await rmv.output()
+            rmv.print()
         except TypeError:
             pass
 
