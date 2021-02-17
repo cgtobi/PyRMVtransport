@@ -8,6 +8,7 @@ dist-name = "PyRMVtransport"
 author = "cgtobi"
 author-email = "cgtobi@gmail.com"
 home-page = "https://github.com/cgtobi/PyRMVtransport"
+license = "MIT"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
     "lxml",
