@@ -21,6 +21,13 @@ PRODUCTS: Dict[str, int] = {
 
 ALL_PRODUCTS: List[str] = list(PRODUCTS.keys())
 
-MAX_RETRIES = 5
+MAX_RETRIES: int = 5
 
-KNOWN_XML_ISSUES = {"<Arr getIn=false>": "<Arr >"}
+KNOWN_XML_ISSUES: Dict[str, str] = {"<Arr getIn=false>": "<Arr >"}
+
+BASE_URI: str = "https://www.rmv.de/auskunft/"
+PREFIX: str = "bin/jp/"
+QUERY_PATH: str = PREFIX + "query.exe/"
+GETSTOP_PATH: str = PREFIX + "ajax-getstop.exe/"
+STBOARD_PATH: str = PREFIX + "stboard.exe/"
+IMG_URL: str = BASE_URI + "s/n/img/products/%i_pic.png"
