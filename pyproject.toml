@@ -11,6 +11,7 @@ home-page = "https://github.com/cgtobi/PyRMVtransport"
 license = "MIT"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
+    "async-timeout",
     "lxml",
     "httpx"
 ]
