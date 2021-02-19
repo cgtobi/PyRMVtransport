@@ -151,7 +151,12 @@ class RMVtransport:
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.get(url)
-                except (asyncio.TimeoutError, httpx.ReadTimeout, httpx.ConnectTimeout):
+                except (
+                    asyncio.TimeoutError,
+                    httpx.ReadTimeout,
+                    httpx.ConnectTimeout,
+                    httpx.ConnectError,
+                ):
                     _LOGGER.error("Can not load data from RMV API")
                     raise RMVtransportApiConnectionError()
 
