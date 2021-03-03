@@ -49,12 +49,6 @@ class RMVtransport:
         self.obj: objectify.ObjectifiedElement
         self.journeys: List[RMVjourney] = []
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
-
     async def get_departures(
         self,
         station_id: str,
