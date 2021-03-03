@@ -31,3 +31,5 @@ QUERY_PATH: str = PREFIX + "query.exe/"
 GETSTOP_PATH: str = PREFIX + "ajax-getstop.exe/"
 STBOARD_PATH: str = PREFIX + "stboard.exe/"
 IMG_URL: str = BASE_URI + "s/n/img/products/%i_pic.png"
+
+SEPARATOR: str = "\n-------------\n"

@@ -25,7 +25,8 @@ from .errors import (
     RMVtransportDataError,
     RMVtransportError,
 )
-from .rmvjourney import RMVJourney
+from .rmvjourney import RMVjourney
+from .rmvtravel import RMVtravel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,13 @@ class RMVtransport:
         self.max_journeys: int
 
         self.obj: objectify.ObjectifiedElement
-        self.journeys: List[RMVJourney] = []
+        self.journeys: List[RMVjourney] = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
     async def get_departures(
         self,
@@ -54,7 +61,7 @@ class RMVtransport:
         direction_id: Optional[str] = None,
         max_journeys: int = 20,
         products: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> RMVtravel:
         """Fetch data from rmv.de."""
         url = self.build_journey_query(station_id, direction_id, max_journeys, products)
         xml = await self._query_rmv_api(url)
@@ -71,10 +78,10 @@ class RMVtransport:
         self.journeys.clear()
         try:
             for journey in self.obj.SBRes.JourneyList.Journey:
-                self.journeys.append(RMVJourney(journey, self.now))
-        except AttributeError:
+                self.journeys.append(RMVjourney(journey, self.now))
+        except AttributeError as err:
             _LOGGER.debug("Extract journeys: %s", objectify.dump(self.obj.SBRes))
-            raise RMVtransportError()
+            raise RMVtransportError(err) from err
 
         return self.travel_data()
 
@@ -139,9 +146,9 @@ class RMVtransport:
 
         try:
             json_data = json.loads(data)
-        except (TypeError, json.JSONDecodeError):
+        except (TypeError, json.JSONDecodeError) as err:
             _LOGGER.debug("Error in JSON: %s...", data[:100])
-            raise RMVtransportError()
+            raise RMVtransportError(err) from err
 
         return list(json_data["suggestions"][:max_results])
 
@@ -156,30 +163,22 @@ class RMVtransport:
                     httpx.ReadTimeout,
                     httpx.ConnectTimeout,
                     httpx.ConnectError,
-                ):
+                ) as err:
                     _LOGGER.error("Can not load data from RMV API")
-                    raise RMVtransportApiConnectionError()
+                    raise RMVtransportApiConnectionError(err) from err
 
         _LOGGER.debug("Response from RMV API: %s", response.status_code)
         return response.read()
 
-    def travel_data(self) -> Dict[str, Any]:
+    def travel_data(self) -> RMVtravel:
         """Return travel data."""
-        return {
-            "station": self.station,
-            "stationId": self.station_id,
-            "filter": self.products_filter,
-            "journeys": self.build_journey_list(),
-        }
-
-    def build_journey_list(self) -> List[Dict]:
-        """Build list of journeys."""
-        return [
-            j.as_dict()
-            for j in sorted(self.journeys, key=lambda k: k.real_departure)[
-                : self.max_journeys
-            ]
-        ]
+        return RMVtravel(
+            self.station,
+            self.station_id,
+            self.products_filter,
+            self.journeys,
+            self.max_journeys,
+        )
 
     @property
     def station(self) -> str:
@@ -191,30 +190,16 @@ class RMVtransport:
         try:
             _date = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("date"), "%Y%m%d")
             _time = datetime.strptime(self.obj.SBRes.SBReq.StartT.get("time"), "%H:%M")
-        except (ValueError, AttributeError):
-            raise RMVtransportDataError()
+        except (ValueError, AttributeError) as err:
+            raise RMVtransportDataError(err) from err
 
         return datetime.combine(_date.date(), _time.time())
 
     def print(self) -> None:
         """Pretty print travel times."""
-        result = [f"{self.station} - {self.now}"]
-
-        for j in sorted(self.journeys, key=lambda k: k.real_departure)[
-            : self.max_journeys
-        ]:
-            result.append("-------------")
-            result.append(f"{j.product}: {j.number} ({j.train_id})")
-            result.append(f"Richtung: {j.direction}")
-            result.append(f"Abfahrt in {j.real_departure} min.")
-            result.append(f"Abfahrt {j.departure.time()} (+{j.delay})")
-            result.append(f"Nächste Haltestellen: {(j.stops)}")
-            if j.info:
-                result.append(f"Hinweis: {j.info}")
-                result.append(f"Hinweis (lang): {j.info_long}")
-            result.append(f"Icon: {j.icon}")
-
-        print("\n".join(result))
+        print(f"{self.station} - {self.now}")
+        print("-------------")
+        print(self.travel_data())
 
 
 def product_filter(products) -> str:
