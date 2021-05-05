@@ -205,9 +205,9 @@ async def test_search_station_fail(httpx_mock):
 async def test__query_rmv_api_fail(httpx_mock):
     """Test failing station search."""
 
-    def raise_timeout(request, ext: dict):
+    def raise_timeout(request, extensions: dict):
         raise httpx.ReadTimeout(
-            f"Unable to read within {ext['timeout']}", request=request
+            f"Unable to read within {extensions['timeout']}", request=request
         )
 
     httpx_mock.add_callback(raise_timeout)
