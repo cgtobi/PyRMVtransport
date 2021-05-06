@@ -113,3 +113,4 @@ xml_test.py
 launch.json
 tagger.py
 .pypirc
+.mutmut-cache

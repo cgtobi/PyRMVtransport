@@ -21,6 +21,7 @@ extension-pkg-whitelist=lxml
 # unnecessary-pass - readability for functions which only contain pass
 disable=
   too-many-instance-attributes,
+  too-many-arguments,
   unnecessary-pass,
   C0330,
 
@@ -37,3 +38,6 @@ expected-line-ending-format=LF
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception
+
+[DESIGN]
+max-parents=8

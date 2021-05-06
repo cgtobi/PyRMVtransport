@@ -11,15 +11,30 @@ from .const import IMG_URL, PRODUCTS
 _LOGGER = logging.getLogger(__name__)
 
 
-class RMVJourney:
+class RMVjourney:
     """A journey object to hold information about a journey."""
 
-    # pylint: disable=I1101
     def __init__(self, journey: objectify.ObjectifiedElement, now: datetime) -> None:
         """Initialize the journey object."""
         self._journey: objectify.ObjectifiedElement = journey
         self._now: datetime = now
         self._attr_types = self._journey.JourneyAttributeList.xpath("*/Attribute/@type")
+
+    def __repr__(self) -> str:
+        result = [
+            f"{self.product}: {self.number} ({self.train_id})",
+            f"Richtung: {self.direction}",
+            f"Abfahrt in {self.real_departure} min.",
+            f"Abfahrt {self.departure.time()} (+{self.delay})",
+            f"Nächste Haltestellen: {(self.stops)}",
+        ]
+
+        if self.info:
+            result.append(f"Hinweis: {self.info}")
+            result.append(f"Hinweis (lang): {self.info_long}")
+
+        result.append(f"Icon: {self.icon}")
+        return "\n".join(result)
 
     def as_dict(self) -> Dict:
         """Build journey dictionary."""
