@@ -148,7 +148,7 @@ class RMVtransport:
 
     async def _query_rmv_api(self, url: str) -> Any:
         """Query RMV API."""
-        with async_timeout.timeout(self._timeout):
+        async with async_timeout.timeout(self._timeout):
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.get(url)
