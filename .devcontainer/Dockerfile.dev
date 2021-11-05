@@ -1,0 +1,15 @@
+ARG VARIANT="3.8"
+
+FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+WORKDIR /workspaces
+
+COPY Makefile pyproject.toml README.md ./
+
+# Install Python dependencies from requirements
+RUN pip install flit pre-commit flake8 pylint pytest black
+
+# Set the default shell to bash instead of sh
+ENV SHELL /bin/bash
