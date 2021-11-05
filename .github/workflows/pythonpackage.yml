@@ -57,6 +57,6 @@ jobs:
         name: codecov-umbrella
     - uses: paambaati/codeclimate-action@v3.0.0
       env:
-        CC_TEST_REPORTER_ID: ${{ secrets.CodeClimate }}
+        CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE }}
       with:
         coverageCommand: coverage xml
