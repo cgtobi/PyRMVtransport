@@ -15,7 +15,7 @@ requires = [
     "lxml",
     "httpx"
 ]
-requires-python=">=3.6"
+requires-python=">=3.7"
 description-file="README.md"
 
 [tool.flit.metadata.requires-extra]
