@@ -214,7 +214,7 @@ def convert_coordinates(value: str) -> float:
     """Convert coordinates to lat/long."""
     if len(value) < 8:
         return float(value[0] + "." + value[1:])
-    return float(value[0:2] + "." + value[2:])
+    return float(value[:2] + "." + value[2:])
 
 
 def extract_data_from_xml(xml: bytes) -> Any:
