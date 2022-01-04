@@ -18,7 +18,7 @@ async def test_getdepartures(httpx_mock, xml_request, capsys):
     with open("fixtures/result_simple.txt") as f:
         result_text = f.read()
 
-    httpx_mock.add_response(data=xml_request)
+    httpx_mock.add_response(text=xml_request)
 
     rmv = RMVtransport()
 
@@ -39,7 +39,7 @@ async def test_departures_products(httpx_mock, xml_request):
     with open("fixtures/result_products_filter.json") as f:
         result_products_filter_json = json.load(f, object_hook=date_hook)
 
-    httpx_mock.add_response(data=xml_request)
+    httpx_mock.add_response(text=xml_request)
 
     rmv = RMVtransport()
 
@@ -53,7 +53,7 @@ async def test_departures_products(httpx_mock, xml_request):
 @pytest.mark.xfail(raises=RMVtransportError)
 async def test_departures_error_xml(httpx_mock):
     """Test with bad xml."""
-    httpx_mock.add_response(data="<ResC></ResC>")
+    httpx_mock.add_response(text="<ResC></ResC>")
 
     rmv = RMVtransport()
 
@@ -65,7 +65,7 @@ async def test_departures_error_xml(httpx_mock):
 @pytest.mark.xfail(raises=RMVtransportError)
 async def test_no_xml(httpx_mock):
     """Test with empty xml."""
-    httpx_mock.add_response(data="")
+    httpx_mock.add_response(text="")
 
     rmv = RMVtransport()
 
@@ -77,7 +77,7 @@ async def test_no_xml(httpx_mock):
 @pytest.mark.xfail(raises=RMVtransportError)
 async def test_departures_error_server(httpx_mock):
     """Test server error handling."""
-    httpx_mock.add_response(data="error", status_code=500)
+    httpx_mock.add_response(text="error", status_code=500)
 
     rmv = RMVtransport()
 
@@ -101,7 +101,7 @@ async def test_departures_bad_request(httpx_mock):
     with open("fixtures/result_bad.json") as json_file:
         result = json.load(json_file, object_hook=date_hook)
 
-    httpx_mock.add_response(data=xml_request)
+    httpx_mock.add_response(text=xml_request)
 
     rmv = RMVtransport()
 
@@ -118,7 +118,7 @@ async def test_no_journeys(httpx_mock):
     with open("fixtures/request_no_journeys.xml") as f:
         xml = f.read()
 
-    httpx_mock.add_response(data=xml)
+    httpx_mock.add_response(text=xml)
 
     rmv = RMVtransport()
 
@@ -133,7 +133,7 @@ async def test_no_timestamp(httpx_mock):
     with open("fixtures/request_no_timestamp.xml") as f:
         xml = f.read()
 
-    httpx_mock.add_response(data=xml)
+    httpx_mock.add_response(text=xml)
 
     rmv = RMVtransport()
 
@@ -149,7 +149,7 @@ async def test_midnight(httpx_mock):
     with open("fixtures/result_midnight.json") as f:
         result = json.load(f, object_hook=date_hook)
 
-    httpx_mock.add_response(data=xml)
+    httpx_mock.add_response(text=xml)
 
     rmv = RMVtransport()
 
@@ -161,7 +161,7 @@ async def test_midnight(httpx_mock):
 @pytest.mark.asyncio
 async def test_search_station(httpx_mock, stops_request):
     """Test station search."""
-    httpx_mock.add_response(data=stops_request)
+    httpx_mock.add_response(text=stops_request)
 
     rmv = RMVtransport()
 
@@ -184,7 +184,7 @@ async def test_search_station_fail(httpx_mock):
     with open("fixtures/request_no_timestamp.xml") as f:
         xml = f.read()
 
-    httpx_mock.add_response(data=xml)
+    httpx_mock.add_response(text=xml)
 
     rmv = RMVtransport()
 
@@ -204,13 +204,7 @@ async def test_search_station_fail(httpx_mock):
 @pytest.mark.xfail(raises=RMVtransportError)
 async def test__query_rmv_api_fail(httpx_mock):
     """Test failing station search."""
-
-    def raise_timeout(request, extensions: dict):
-        raise httpx.ReadTimeout(
-            f"Unable to read within {extensions['timeout']}", request=request
-        )
-
-    httpx_mock.add_callback(raise_timeout)
+    httpx_mock.add_exception(httpx.ReadTimeout("Unable to read within timeout"))
 
     with pytest.raises(httpx.ReadTimeout):
         rmv = RMVtransport(timeout=0.005)

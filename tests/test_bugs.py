@@ -31,7 +31,7 @@ async def test_bug_3006907(httpx_mock, capsys):
     with open("fixtures/bug_3006907.xml") as f:
         xml_request = f.read()
 
-    httpx_mock.add_response(data=xml_request)
+    httpx_mock.add_response(text=xml_request)
 
     rmv = RMVtransport()
 
@@ -50,7 +50,7 @@ async def test_bug_request_bad_product(httpx_mock, capsys):
     with open("fixtures/request_bad_product.xml") as f:
         xml_request = f.read()
 
-    httpx_mock.add_response(data=xml_request)
+    httpx_mock.add_response(text=xml_request)
 
     rmv = RMVtransport()
 
