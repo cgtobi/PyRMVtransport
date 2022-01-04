@@ -109,7 +109,7 @@ class RMVtransport:
         return base_url() + urllib.parse.urlencode(params)
 
     async def search_station(self, name: str, max_results: int = 25) -> Dict[str, Dict]:
-        """Search station/stop my name."""
+        """Search station/stop by name."""
         suggestions: List = await self._fetch_sugestions(name, max_results)
 
         return {
@@ -125,7 +125,7 @@ class RMVtransport:
     async def _fetch_sugestions(
         self, name: str, max_results: int
     ) -> List[Optional[Dict]]:
-        """Fetch suggestsions for the given station name from the backend."""
+        """Fetch suggestions for the given station name from the backend."""
         params: Dict[str, Union[str, int]] = {
             "getstop": 1,
             "REQ0JourneyStopsS0A": max_results,
