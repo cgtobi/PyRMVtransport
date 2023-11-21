@@ -55,9 +55,10 @@ class RMVtransport:
         direction_id: Optional[str] = None,
         max_journeys: int = 20,
         products: Optional[List[str]] = None,
+        time: Optional[str] = "now"
     ) -> RMVtravel:
         """Fetch data from rmv.de."""
-        url = self.build_journey_query(station_id, direction_id, max_journeys, products)
+        url = self.build_journey_query(station_id, direction_id, max_journeys, products, time)
         xml = await self._query_rmv_api(url)
         self.obj = extract_data_from_xml(xml)
 
@@ -85,16 +86,18 @@ class RMVtransport:
         direction_id: Optional[str] = None,
         max_journeys: int = 20,
         products: Optional[List[str]] = None,
+        time: Optional[str] = "now"
     ) -> str:
         """Build query to request journey data."""
         self.station_id = station_id
         self.direction_id = direction_id
         self.max_journeys = max_journeys
         self.products_filter = product_filter(products or ALL_PRODUCTS)
+        self.time = time
 
         params: Dict[str, Union[str, int]] = {
             "selectDate": "today",
-            "time": "now",
+            "time": self.time,
             "input": self.station_id,
             "maxJourneys": self.max_journeys,
             "boardType": "dep",
