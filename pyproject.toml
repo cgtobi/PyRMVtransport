@@ -30,7 +30,6 @@ test = [
     "asynctest",
     "codecov",
     "coverage",
-    "mock",
     "flake8",
     "mypy",
     "bandit",
