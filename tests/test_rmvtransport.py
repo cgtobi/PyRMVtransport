@@ -1,4 +1,5 @@
 """Define tests for the client object."""
+
 import json
 import httpx
 

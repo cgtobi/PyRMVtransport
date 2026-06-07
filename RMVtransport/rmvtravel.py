@@ -1,4 +1,5 @@
 """This class represents a collection of journeys."""
+
 from collections import UserDict
 from typing import Dict, List
 

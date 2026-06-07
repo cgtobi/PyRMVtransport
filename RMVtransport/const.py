@@ -1,6 +1,6 @@
 """Constants."""
-from typing import List, Dict
 
+from typing import List, Dict
 
 PRODUCTS: Dict[str, int] = {
     "ICE": 1,

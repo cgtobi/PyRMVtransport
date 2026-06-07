@@ -1,11 +1,11 @@
 """Define tests for the client object."""
+
 from datetime import datetime
 import logging
 
 import pytest
 
 from RMVtransport import RMVtransport
-
 
 logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ URL_SEARCH_PATH = "/auskunft/bin/jp/ajax-getstop.exe/dn"
 
 def date_hook(json_dict):
     """JSON datetime parser."""
-    for (key, value) in json_dict.items():
+    for key, value in json_dict.items():
         try:
             json_dict[key] = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
         except (TypeError, ValueError):

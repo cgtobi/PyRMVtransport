@@ -1,4 +1,5 @@
 """This class represents a single journey."""
+
 import html
 import logging
 from datetime import datetime, timedelta

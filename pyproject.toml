@@ -11,11 +11,10 @@ home-page = "https://github.com/cgtobi/PyRMVtransport"
 license = "MIT"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
-    "async-timeout>=4.0.0",
     "lxml",
     "httpx"
 ]
-requires-python=">=3.7"
+requires-python=">=3.11"
 description-file="README.md"
 
 [tool.flit.metadata.requires-extra]
