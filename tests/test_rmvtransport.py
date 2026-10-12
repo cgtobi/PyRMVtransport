@@ -211,3 +211,13 @@ async def test__query_rmv_api_fail(httpx_mock):
 
         url = f"https://{URL}{URL_SEARCH_PATH}"
         await rmv._query_rmv_api(url)
+
+
+def test_build_journey_query_disables_equivalent_stops():
+    """Test that the station board query excludes equivalent stops."""
+    rmv = RMVtransport()
+
+    url = rmv.build_journey_query("3024456")
+
+    assert "disableEquivs=yes" in url
+    assert "input=3024456" in url

@@ -99,7 +99,7 @@ class RMVtransport:
             "maxJourneys": self.max_journeys,
             "boardType": "dep",
             "productsFilter": self.products_filter,
-            "disableEquivs": "discard_nearby",
+            "disableEquivs": "yes",
             "output": "xml",
             "start": "yes",
         }
